@@ -33,6 +33,21 @@ namespace ServiceTracker
         public Worker Employee { get; set; }
 
         /// <summary>
+        /// Gets or sets the database of employees
+        /// </summary>
+        public Dictionary<int, Worker> Employees { get; set; }
+
+        /// <summary>
+        /// Gets or sets the database of clients
+        /// </summary>
+        public Dictionary<int, Client> Clients { get; set; }
+
+        /// <summary>
+        /// Gets or sets the database of service calls
+        /// </summary>
+        public Dictionary<int, ServiceCall> ServiceCalls { get; set; }
+
+        /// <summary>
         /// Writes the employee username and the current time to a file to log who uses the program
         /// </summary>
         /// <param name="date">Current date</param>

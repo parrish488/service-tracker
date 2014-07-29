@@ -34,6 +34,7 @@ namespace ServiceTracker
                     tempWorker.Password = r["password"].ToString();
                     tempWorker.ID = int.Parse(r["id"].ToString());
                     tempWorker.CorrectiveActions = r["correctiveActions"].ToString();
+                    tempWorker.ActionStatus = r["actionStatus"].ToString();
 
                     tempEmployees.Add(tempWorker.ID, tempWorker);
                 }

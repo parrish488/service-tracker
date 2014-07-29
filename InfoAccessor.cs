@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Windows.Forms;
 
@@ -6,7 +7,8 @@ namespace ServiceTracker
 {
     public partial class InfoAccessor : Form
     {
-        String addType;
+        Session session = new Session();
+        string addType;
         public bool employee = false;
         public bool client = false;
         public bool ticket = false;
@@ -18,9 +20,10 @@ namespace ServiceTracker
             InitializeComponent();
         }
 
-        public InfoAccessor(String type)
+        public InfoAccessor(String type, Session mainSession)
         {
             InitializeComponent();
+            session = mainSession;
             addType = type;
             if (addType == "Ticket" || addType == "CloseTicket" || addType == "CompleteTicket" || addType == "UnassignedTicket")
             {
@@ -93,85 +96,42 @@ namespace ServiceTracker
             switch (addType)
             {
                 case "Client":
+                {
+                    this.Text = "Viewing Clients";
+
+                    foreach (KeyValuePair<int, Client> client in session.Clients)
                     {
-                        this.Text = "Viewing Clients";
-                        SQLiteDatabase db;
-
-                        try
-                        {
-                            db = new SQLiteDatabase();
-                            DataTable clients;
-                            String query = "select * from Client";
-                            clients = db.GetDataTable(query);
-
-                            foreach (DataRow r in clients.Rows)
-                            {
-                                lbInfo.Items.Add(r["firstName"].ToString() + " " + r["lastName"].ToString());
-                            }
-                        }
-                        catch (Exception fail)
-                        {
-                            String error = "The following error has occurred:\n\n";
-                            error += fail.Message.ToString() + "\n\n";
-                            MessageBox.Show(error);
-                        }
+                        lbInfo.Items.Add(client.Value.FirstName + " " + client.Value.LastName);
                     }
-                    break;
+                }
+                break;
 
                 case "Corrective":
+                {
+                    this.Text = "Viewing Employees";
+
+                    foreach (KeyValuePair<int, Worker> employee in session.Employees)
                     {
-                        this.Text = "Viewing Employees";
-                        SQLiteDatabase db;
-
-                        try
+                        if (employee.Value.ActionStatus == "Pending Management Review")
                         {
-                            db = new SQLiteDatabase();
-                            DataTable employees;
-                            String query = "select * from Worker";
-                            employees = db.GetDataTable(query);
-
-                            foreach (DataRow r in employees.Rows)
-                            {
-                                if (r["actionStatus"].ToString() == "Pending Management Review")
-                                {
-                                    lbInfo.Items.Add(r["firstName"].ToString() + " " + r["lastName"].ToString());
-                                }
-                            }
-                        }
-                        catch (Exception fail)
-                        {
-                            String error = "The following error has occurred:\n\n";
-                            error += fail.Message.ToString() + "\n\n";
-                            MessageBox.Show(error);
+                            lbInfo.Items.Add(employee.Value.FirstName + " " + employee.Value.LastName);
                         }
                     }
-                    break;
+
+                }
+                break;
 
                 case "Employee":
+                {
+                    this.Text = "Viewing Employees";
+
+                    foreach (KeyValuePair<int, Worker> employee in session.Employees)
                     {
-                        this.Text = "Viewing Employees";
-                        SQLiteDatabase db;
-
-                        try
-                        {
-                            db = new SQLiteDatabase();
-                            DataTable employees;
-                            String query = "select * from Worker";
-                            employees = db.GetDataTable(query);
-
-                            foreach (DataRow r in employees.Rows)
-                            {
-                                lbInfo.Items.Add(r["firstName"].ToString() + " " + r["lastName"].ToString());
-                            }
-                        }
-                        catch (Exception fail)
-                        {
-                            String error = "The following error has occurred:\n\n";
-                            error += fail.Message.ToString() + "\n\n";
-                            MessageBox.Show(error);
-                        }
+                        lbInfo.Items.Add(employee.Value.FirstName + " " + employee.Value.LastName);
                     }
-                    break;
+                }
+                break;
+
                 case "CloseTicket":
                     {
                         this.Text = "Viewing Tickets";

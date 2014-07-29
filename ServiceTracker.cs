@@ -1,4 +1,14 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+// <copyright file="ServiceTracker.cs" company="ParrishCorp">
+//     Copyright (c) ParrishCorp. All rights reserved.
+// </copyright>
+//
+// <revisionHistory> 
+// Jul 11, 2014     J. Parrish      Initial Implementation
+// </revisionHistory> 
+//-----------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -6,24 +16,35 @@ using System.Windows.Forms;
 
 namespace ServiceTracker
 {
+    /// <summary>
+    /// System used to keep track of service calls
+    /// </summary>
     public partial class ServiceTracker : Form
     {
-        Session session = new Session();
+        /// <summary>Session to keep track of user information</summary>
+        private Session session = new Session();
 
+        /// <summary>Query object for reloading the database</summary>
         private DatabaseQuery query = new DatabaseQuery();
 
-        private Dictionary<int, Worker> employees = new Dictionary<int, Worker>();
+        ///// <summary>Database of employees</summary>
+        //private Dictionary<int, Worker> employees = new Dictionary<int, Worker>();
 
-        private Dictionary<int, Client> clients = new Dictionary<int, Client>();
+        ///// <summary>Database of clients</summary>
+        //private Dictionary<int, Client> clients = new Dictionary<int, Client>();
 
-        private Dictionary<int, ServiceCall> serviceCalls = new Dictionary<int, ServiceCall>();
+        ///// <summary>Database of service calls</summary>
+        //private Dictionary<int, ServiceCall> serviceCalls = new Dictionary<int, ServiceCall>();
 
+        /// <summary>
+        /// Initializes a new instance of the ServiceTracker class
+        /// </summary>
         public ServiceTracker()
         {
             InitializeComponent();
-            employees = query.QueryForAllWorkers();
-            clients = query.QueryForAllClients();
-            serviceCalls = query.QueryForAllServiceCalls(clients);
+            session.Employees = query.QueryForAllWorkers();
+            session.Clients = query.QueryForAllClients();
+            session.ServiceCalls = query.QueryForAllServiceCalls(session.Clients);
 
             UserAuthentication();            
 
@@ -39,13 +60,22 @@ namespace ServiceTracker
 
             #endregion
         }
-          
+        
+        /// <summary>
+        /// Menu item to close the program
+        /// </summary>
+        /// <param name="sender">sender object</param>
+        /// <param name="e">e parameters</param>
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
         }       
 
-        //Event for updating to time and date
+        /// <summary>
+        /// Updates the times on the main interface
+        /// </summary>
+        /// <param name="sender">sender object</param>
+        /// <param name="e">e parameters</param>
         private void Timer_Elapsed(object sender, EventArgs e)
         {
             tbTime.Text = DateTime.Now.ToLongTimeString();
@@ -73,7 +103,7 @@ namespace ServiceTracker
             scheduleVisitsToolStripMenuItem.Enabled = true;
             addCorrectiveActionToolStripMenuItem.Enabled = true;
 
-            ManagerCloseUpdate();
+            //ManagerCloseUpdate();
         }
 
         private void LoadTechnicianMainScreen()
@@ -127,7 +157,7 @@ namespace ServiceTracker
 
         private void UserAuthentication()
         {
-            UserLogin login = new UserLogin(employees);
+            UserLogin login = new UserLogin(session.Employees);
             DialogResult dialogResult = login.ShowDialog();
             
             if (login.DialogResult == DialogResult.Yes)
@@ -167,7 +197,7 @@ namespace ServiceTracker
         {
             if (session.Employee.WorkerType == "Manager")
             {
-                InfoAccessor information = new InfoAccessor("CloseTicket");
+                InfoAccessor information = new InfoAccessor("CloseTicket", session);
                 DialogResult dialogResult = information.ShowDialog();
 
                 if (information.DialogResult == DialogResult.Yes)
@@ -213,7 +243,7 @@ namespace ServiceTracker
 
             else
             {
-                InfoAccessor information = new InfoAccessor("Client");
+                InfoAccessor information = new InfoAccessor("Client", session);
                 DialogResult dialogResult = information.ShowDialog();
 
                 if(information.DialogResult == DialogResult.Yes)
@@ -242,7 +272,7 @@ namespace ServiceTracker
         {
             if (session.Employee.WorkerType == "Manager")
             {
-                InfoAccessor information = new InfoAccessor("Corrective");
+                InfoAccessor information = new InfoAccessor("Corrective", session);
                 DialogResult dialogResult = information.ShowDialog();
 
                 if (information.DialogResult == DialogResult.Yes)
@@ -265,7 +295,7 @@ namespace ServiceTracker
 
             else if (session.Employee.WorkerType == "Technician")
             {
-                InfoAccessor information = new InfoAccessor("UnassignedTicket");
+                InfoAccessor information = new InfoAccessor("UnassignedTicket", session);
                 DialogResult dialogResult = information.ShowDialog();
 
                 if (information.DialogResult == DialogResult.Yes)
@@ -288,7 +318,7 @@ namespace ServiceTracker
 
             else
             {
-                InfoAccessor information = new InfoAccessor("Client");
+                InfoAccessor information = new InfoAccessor("Client", session);
                 DialogResult dialogResult = information.ShowDialog();
 
                 if (information.DialogResult == DialogResult.Yes)
@@ -316,7 +346,7 @@ namespace ServiceTracker
         {
             if (session.Employee.WorkerType == "Manager")
             {
-                InfoAccessor information = new InfoAccessor("Employee");
+                InfoAccessor information = new InfoAccessor("Employee", session);
                 DialogResult dialogResult = information.ShowDialog();
 
                 if (information.DialogResult == DialogResult.Yes)
@@ -346,7 +376,7 @@ namespace ServiceTracker
 
             else
             {
-                InfoAccessor information = new InfoAccessor("Employee");
+                InfoAccessor information = new InfoAccessor("Employee", session);
                 DialogResult dialogResult = information.ShowDialog();
 
                 if (information.DialogResult == DialogResult.Yes)
@@ -425,7 +455,7 @@ namespace ServiceTracker
         {
             if (session.Employee.WorkerType == "Manager")
             {
-                InfoAccessor information = new InfoAccessor("CloseTicket");
+                InfoAccessor information = new InfoAccessor("CloseTicket", session);
                 DialogResult dialogResult = information.ShowDialog();
 
                 if (information.DialogResult == DialogResult.Yes)
@@ -449,7 +479,7 @@ namespace ServiceTracker
 
         private void correctiveActionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            InfoAccessor information = new InfoAccessor("Corrective");
+            InfoAccessor information = new InfoAccessor("Corrective", session);
             DialogResult dialogResult = information.ShowDialog();
 
             if (information.DialogResult == DialogResult.Yes)
@@ -472,7 +502,7 @@ namespace ServiceTracker
 
         private void manageEmployeesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            InfoAccessor information = new InfoAccessor("Employee");
+            InfoAccessor information = new InfoAccessor("Employee", session);
             DialogResult dialogResult = information.ShowDialog();
 
             if (information.DialogResult == DialogResult.Yes)
@@ -522,7 +552,7 @@ namespace ServiceTracker
 
         private void viewUnassignedVisitsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            InfoAccessor information = new InfoAccessor("UnassignedTicket");
+            InfoAccessor information = new InfoAccessor("UnassignedTicket", session);
             DialogResult dialogResult = information.ShowDialog();
 
             if (information.DialogResult == DialogResult.Yes)
@@ -555,7 +585,7 @@ namespace ServiceTracker
 
         private void viewClientsToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            InfoAccessor information = new InfoAccessor("Client");
+            InfoAccessor information = new InfoAccessor("Client", session);
             DialogResult dialogResult = information.ShowDialog();
 
             if (information.DialogResult == DialogResult.Yes)
@@ -581,7 +611,7 @@ namespace ServiceTracker
 
         private void scheduleVisitsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            InfoAccessor information = new InfoAccessor("Client");
+            InfoAccessor information = new InfoAccessor("Client", session);
             DialogResult dialogResult = information.ShowDialog();
 
             if (information.DialogResult == DialogResult.Yes)
@@ -606,7 +636,7 @@ namespace ServiceTracker
 
         private void addCorrectiveActionToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            InfoAccessor information = new InfoAccessor("Employee");
+            InfoAccessor information = new InfoAccessor("Employee", session);
             DialogResult dialogResult = information.ShowDialog();
 
             if (information.DialogResult == DialogResult.Yes)

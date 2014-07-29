@@ -51,5 +51,10 @@ namespace ServiceTracker
         /// Gets or sets corrective actions
         /// </summary>
         public string CorrectiveActions { get; set; }
+
+        /// <summary>
+        /// Gets or sets the action status
+        /// </summary>
+        public string ActionStatus { get; set; }
     }
 }

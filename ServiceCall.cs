@@ -3,7 +3,7 @@
 namespace ServiceTracker
 {
     //Fix getters/setters and set up a constructor
-    class ServiceCall
+    public class ServiceCall
     {
         public int Id { get; set; }
 

@@ -26,17 +26,23 @@ namespace ServiceTracker
         /// <summary>Holder for the employee</summary>
         private Worker employee = new Worker();
 
+        /// <summary>Collection of employees based on user ID</summary>
         private Dictionary<int, Worker> employees = new Dictionary<int, Worker>();
 
         /// <summary>
         /// Initializes a new instance of the UserLogin class
         /// </summary>
+        /// <param name="emps">employee database</param>
         public UserLogin(Dictionary<int, Worker> emps)
         {
             InitializeComponent();
             employees = emps;
         }
 
+        /// <summary>
+        /// Gets the employee that is signing in
+        /// </summary>
+        /// <returns>worker object</returns>
         public Worker GetEmployee()
         {
             return employee;
@@ -67,7 +73,8 @@ namespace ServiceTracker
         /// </summary>
         private void LoginAction()
         {
-            if (employees.ContainsKey(int.Parse(tbEmpID.Text)))
+            int temp;
+            if (int.TryParse(tbEmpID.Text, out temp) && employees.ContainsKey(int.Parse(tbEmpID.Text)))
             {
                 if (tbPassword.Text == employees[int.Parse(tbEmpID.Text)].Password)
                 {
