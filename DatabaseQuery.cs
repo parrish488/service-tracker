@@ -10,9 +10,9 @@ namespace ServiceTracker
 {
   class DatabaseQuery
   {
-    public Dictionary<int, Worker> QueryForAllWorkers()
+    public Dictionary<string, Worker> QueryForAllWorkers()
     {
-      Dictionary<int, Worker> tempEmployees = new Dictionary<int, Worker>();
+      Dictionary<string, Worker> tempEmployees = new Dictionary<string, Worker>();
 
       SQLiteDatabase db;
 
@@ -35,7 +35,7 @@ namespace ServiceTracker
           tempWorker.ID = int.Parse(r["id"].ToString());
           tempWorker.CorrectiveActions = r["correctiveActions"].ToString();
 
-          tempEmployees.Add(tempWorker.ID, tempWorker);
+          tempEmployees.Add(tempWorker.Username, tempWorker);
         }
       }
       catch (Exception fail)

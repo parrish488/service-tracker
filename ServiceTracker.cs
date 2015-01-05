@@ -1,4 +1,13 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+// <copyright file="ServiceTracker.cs" company="ParrishCorp">
+//     Copyright (c) ParrishCorp. All rights reserved.
+// </copyright>
+//
+// <revisionHistory> 
+// Jul 11, 2014     J. Parrish      Initial Implementation
+// </revisionHistory> 
+//-----------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,20 +19,9 @@ namespace ServiceTracker
   {
     Session session = new Session();
 
-    private DatabaseQuery query = new DatabaseQuery();
-
-    private Dictionary<int, Worker> employees = new Dictionary<int, Worker>();
-
-    private Dictionary<int, Client> clients = new Dictionary<int, Client>();
-
-    private Dictionary<int, ServiceCall> serviceCalls = new Dictionary<int, ServiceCall>();
-
     public ServiceTracker()
     {
       InitializeComponent();
-      employees = query.QueryForAllWorkers();
-      clients = query.QueryForAllClients();
-      serviceCalls = query.QueryForAllServiceCalls(clients);
 
       UserAuthentication();
 
@@ -127,12 +125,12 @@ namespace ServiceTracker
 
     private void UserAuthentication()
     {
-      UserLogin login = new UserLogin(employees);
+      UserLogin login = new UserLogin();
       DialogResult dialogResult = login.ShowDialog();
 
       if (login.DialogResult == DialogResult.Yes)
       {
-        session.Employee = login.GetEmployee();
+        session.Employee = login.Employee;
         session.StartSession(System.DateTime.Now.ToShortDateString(), System.DateTime.Now.ToLongTimeString());
 
         if (session.Employee.WorkerType == "Manager")
@@ -152,15 +150,6 @@ namespace ServiceTracker
       {
         Application.Exit();
       }
-    }
-
-    private void dgvUserData_MouseDoubleClick(object sender, MouseEventArgs e)
-    {
-      //3 Functions
-      //One for Manager
-      //One for Technician
-      //One for CSR
-      //Each will show needed tasks
     }
 
     private void btnUserTask1_Click(object sender, EventArgs e)

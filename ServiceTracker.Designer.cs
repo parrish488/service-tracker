@@ -280,7 +280,6 @@
             this.dgvUserData.ShowEditingIcon = false;
             this.dgvUserData.Size = new System.Drawing.Size(491, 277);
             this.dgvUserData.TabIndex = 57;
-            this.dgvUserData.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.dgvUserData_MouseDoubleClick);
             // 
             // Client
             // 

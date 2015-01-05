@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="Authenticator.cs" company="ParrishCorp">
+// <copyright file="UserLogin.cs" company="ParrishCorp">
 //     Copyright (c) ParrishCorp. All rights reserved.
 // </copyright>
 //
@@ -21,25 +21,18 @@ namespace ServiceTracker
   public partial class UserLogin : Form
   {
     /// <summary>Check for authentication errors</summary>
-    private bool error = false;
+    private bool m_error = false;
 
     /// <summary>Holder for the employee</summary>
-    private Worker employee = new Worker();
-
-    private Dictionary<int, Worker> employees = new Dictionary<int, Worker>();
+    public Worker Employee { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the UserLogin class
     /// </summary>
-    public UserLogin(Dictionary<int, Worker> emps)
+    public UserLogin()
     {
       InitializeComponent();
-      employees = emps;
-    }
-
-    public Worker GetEmployee()
-    {
-      return employee;
+      Employee = new Worker();
     }
 
     /// <summary>
@@ -67,24 +60,27 @@ namespace ServiceTracker
     /// </summary>
     private void LoginAction()
     {
-      if (employees.ContainsKey(int.Parse(tbEmpID.Text)))
+      DatabaseQuery query = new DatabaseQuery();
+      Dictionary<string, Worker> queryReturn = query.QueryForAllWorkers();
+
+      if (queryReturn.ContainsKey(tbEmpID.Text))
       {
-        if (tbPassword.Text == employees[int.Parse(tbEmpID.Text)].Password)
+        if (tbPassword.Text == queryReturn[tbEmpID.Text].Password)
         {
-          employee = employees[int.Parse(tbEmpID.Text)];
-          error = false;
+          Employee = queryReturn[tbEmpID.Text];
+          m_error = false;
         }
         else
         {
-          error = true;
+          m_error = true;
         }
       }
       else
       {
-        error = true;
+        m_error = true;
       }
 
-      if (error == false)
+      if (m_error == false)
       {
         DialogResult = DialogResult.Yes;
       }
