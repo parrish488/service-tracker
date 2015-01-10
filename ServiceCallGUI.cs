@@ -1,163 +1,155 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+// <copyright file="ServiceCallGUI.cs" company="ParrishCorp">
+//     Copyright (c) ParrishCorp. All rights reserved.
+// </copyright>
+//
+// <revisionHistory> 
+// Jul 11, 2014     J. Parrish      Initial Implementation
+// </revisionHistory> 
+//-----------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Windows.Forms;
 
 namespace ServiceTracker
 {
+  /// <summary>
+  /// Service call user interface class
+  /// </summary>
   public partial class ServiceCallGUI : Form
   {
-    ServiceCall info = new ServiceCall();
-    string tempId;
-    bool update = false;
+    /// <summary>Query object</summary>
+    private DatabaseQuery m_queries = new DatabaseQuery();
 
+    /// <summary>Temporary client id</summary>
+    private string m_tempClientId;
+
+    /// <summary>Update flag</summary>
+    private bool m_update = false;
+
+    /// <summary>
+    /// Initializes a new instance of the ServiceCallGUI class
+    /// </summary>
     public ServiceCallGUI()
     {
       InitializeComponent();
-      update = false;
+      m_update = false;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the ServiceCallGUI class
+    /// </summary>
+    /// <param name="clientId">Client id number</param>
     public ServiceCallGUI(string clientId)
     {
       InitializeComponent();
-      tempId = clientId;
-      update = false;
-      SQLiteDatabase db;
+      m_tempClientId = clientId;
+      m_update = false;
+      Dictionary<int, Client> clients = m_queries.QueryForAllClients(int.Parse(m_tempClientId));
 
-      try
+      tbFirstName.Text = clients[int.Parse(clientId)].FirstName;
+      tbLastName.Text = clients[int.Parse(clientId)].LastName;
+      tbAddress.Text = clients[int.Parse(clientId)].Address;
+      tbPhoneNumber.Text = clients[int.Parse(clientId)].PhoneNumber;
+
+      Dictionary<string, Worker> workers = m_queries.QueryForAllWorkers("null");
+
+      foreach (KeyValuePair<string, Worker> pair in workers)
       {
-        db = new SQLiteDatabase();
-        DataTable tickets;
-        DataTable clients;
-
-        String ticketQuery = "select * from Worker";
-        String clientQuery = "select * from Client";
-        tickets = db.GetDataTable(ticketQuery);
-        clients = db.GetDataTable(clientQuery);
-
-        foreach (DataRow r in clients.Rows)
-        {
-          if (r["id"].ToString() == clientId)
-          {
-            tbFirstName.Text = r["firstName"].ToString();
-            tbLastName.Text = r["lastName"].ToString();
-            tbAddress.Text = r["address"].ToString();
-            tbPhoneNumber.Text = r["phone"].ToString();
-          }
-        }
-
-        foreach (DataRow r in tickets.Rows)
-        {
-          cbAssignedTech.Items.Add(r["firstName"] + " " + r["lastName"]);
-          cbTakenBy.Items.Add(r["firstName"] + " " + r["lastName"]);
-        }
-      }
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
+        cbAssignedTech.Items.Add(pair.Value.FirstName + " " + pair.Value.LastName);
+        cbTakenBy.Items.Add(pair.Value.FirstName + " " + pair.Value.LastName);
       }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the ServiceCallGUI class
+    /// </summary>
+    /// <param name="clientId">Client id number</param>
+    /// <param name="ticketDate">Ticket date</param>
     public ServiceCallGUI(string clientId, string ticketDate)
     {
       InitializeComponent();
       string[] s = ticketDate.Split('@');
-      tempId = clientId;
-      update = true;
-      SQLiteDatabase db;
+      m_tempClientId = clientId;
+      m_update = true;
 
-      try
+      Dictionary<int, Client> clients = m_queries.QueryForAllClients(int.Parse(m_tempClientId));
+
+      tbFirstName.Text = clients[int.Parse(clientId)].FirstName;
+      tbLastName.Text = clients[int.Parse(clientId)].LastName;
+      tbAddress.Text = clients[int.Parse(clientId)].Address;
+      tbPhoneNumber.Text = clients[int.Parse(clientId)].PhoneNumber;
+
+      Dictionary<string, Worker> workers = m_queries.QueryForAllWorkers("null");
+
+      foreach (KeyValuePair<string, Worker> pair in workers)
       {
-        db = new SQLiteDatabase();
-        DataTable worker;
-        DataTable clients;
-        DataTable tickets;
-
-        String workerQuery = "select * from Worker";
-        String clientQuery = "select * from Client";
-        String ticketQuery = "select * from ServiceTicket";
-        worker = db.GetDataTable(workerQuery);
-        clients = db.GetDataTable(clientQuery);
-        tickets = db.GetDataTable(ticketQuery);
-
-        foreach (DataRow r in clients.Rows)
-        {
-          if (r["id"].ToString() == clientId)
-          {
-            tbFirstName.Text = r["firstName"].ToString();
-            tbLastName.Text = r["lastName"].ToString();
-            tbAddress.Text = r["address"].ToString();
-            tbPhoneNumber.Text = r["phone"].ToString();
-          }
-        }
-
-        foreach (DataRow r in worker.Rows)
-        {
-          cbAssignedTech.Items.Add(r["firstName"] + " " + r["lastName"]);
-          cbTakenBy.Items.Add(r["firstName"] + " " + r["lastName"]);
-        }
-
-        foreach (DataRow r in tickets.Rows)
-        {
-          if (r["client"].ToString() == clientId && (r["visitDate"].ToString() + " ") == s[0].ToString())
-          {
-            for (int i = 0; i < cbAssignedTech.Items.Count; i++)
-            {
-              if (cbAssignedTech.Items[i].ToString() == r["assignedTech"].ToString())
-              {
-                cbAssignedTech.SelectedIndex = i;
-              }
-            }
-            for (int i = 0; i < cbJobStatus.Items.Count; i++)
-            {
-              if (cbJobStatus.Items[i].ToString() == r["status"].ToString())
-              {
-                cbJobStatus.SelectedIndex = i;
-              }
-            }
-            for (int i = 0; i < cbTakenBy.Items.Count; i++)
-            {
-              if (cbTakenBy.Items[i].ToString() == r["callTaker"].ToString())
-              {
-                cbTakenBy.SelectedIndex = i;
-              }
-            }
-            lbTicketNumber.Text = r["id"].ToString();
-            tbVisitComments.Text = r["comments"].ToString();
-            string temp = r["visitDate"].ToString();
-            DateTime tempDate = DateTime.Parse(temp);
-            dtpDate.Value = tempDate;
-            string temp1 = r["visitTime"].ToString();
-            DateTime tempTime = DateTime.Parse(temp1);
-            dtpTime.Value = tempTime;
-          }
-        }
+        cbAssignedTech.Items.Add(pair.Value.FirstName + " " + pair.Value.LastName);
+        cbTakenBy.Items.Add(pair.Value.FirstName + " " + pair.Value.LastName);
       }
-      catch (Exception fail)
+
+      Dictionary<int, ServiceCall> tickets = m_queries.QueryForAllServiceCalls(m_queries.QueryForAllClients(-1));
+
+      foreach (KeyValuePair<int, ServiceCall> pair in tickets)
       {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
+        if (pair.Value.ClientId.ToString() == clientId && pair.Value.Date.ToString() == s[0].ToString())
+        {
+          for (int i = 0; i < cbAssignedTech.Items.Count; i++)
+          {
+            if (cbAssignedTech.Items[i].ToString() == pair.Value.Tech.ToString())
+            {
+              cbAssignedTech.SelectedIndex = i;
+            }
+          }
+
+          for (int i = 0; i < cbJobStatus.Items.Count; i++)
+          {
+            if (cbJobStatus.Items[i].ToString() == pair.Value.JobStatus.ToString())
+            {
+              cbJobStatus.SelectedIndex = i;
+            }
+          }
+
+          for (int i = 0; i < cbTakenBy.Items.Count; i++)
+          {
+            if (cbTakenBy.Items[i].ToString() == pair.Value.CallTaker.ToString())
+            {
+              cbTakenBy.SelectedIndex = i;
+            }
+          }
+
+          lbTicketNumber.Text = pair.Value.Id.ToString();
+          tbVisitComments.Text = pair.Value.Comments.ToString();
+          string temp = pair.Value.Date.ToString();
+          DateTime tempDate = DateTime.Parse(temp);
+          dtpDate.Value = tempDate;
+          string temp1 = pair.Value.Time.ToString();
+          DateTime tempTime = DateTime.Parse(temp1);
+          dtpTime.Value = tempTime;
+        }
       }
     }
 
-    private void btnSubmit_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Submit button event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnSubmit_Click(object sender, EventArgs e)
     {
-      if (tbFirstName.Text != "" && tbLastName.Text != "" && tbPhoneNumber.Text != ""
-         && tbAddress.Text != "" && tbVisitComments.Text != "" && cbTakenBy.Text != ""
-         && cbJobStatus.Text != "" && cbAssignedTech.Text != "" && dtpTime.Text != ""
-         && dtpDate.Text != "")
+      if (tbFirstName.Text != string.Empty && tbLastName.Text != string.Empty && tbPhoneNumber.Text != string.Empty
+         && tbAddress.Text != string.Empty && tbVisitComments.Text != string.Empty && cbTakenBy.Text != string.Empty
+         && cbJobStatus.Text != string.Empty && cbAssignedTech.Text != string.Empty && dtpTime.Text != string.Empty
+         && dtpDate.Text != string.Empty)
       {
-        if (update == false)
+        if (m_update == false)
         {
-          databaseInsert();
+          DatabaseInsert();
           DialogResult = DialogResult.Yes;
         }
         else
         {
-          databaseUpdate();
+          DatabaseUpdate();
           DialogResult = DialogResult.Yes;
         }
       }
@@ -167,15 +159,22 @@ namespace ServiceTracker
       }
     }
 
-    private void btnCancel_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Cancel button event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnCancel_Click(object sender, EventArgs e)
     {
       DialogResult = DialogResult.No;
     }
 
-    private void databaseInsert()
+    /// <summary>
+    /// Database insert
+    /// </summary>
+    private void DatabaseInsert()
     {
-      SQLiteDatabase db = new SQLiteDatabase();
-      Dictionary<String, String> data = new Dictionary<string, string>();
+      Dictionary<string, string> data = new Dictionary<string, string>();
 
       data.Add("comments", tbVisitComments.Text.ToString());
 
@@ -185,26 +184,17 @@ namespace ServiceTracker
 
       data.Add("visitTime", dtpTime.Value.ToShortTimeString());
       data.Add("visitDate", dtpDate.Value.ToShortDateString());
-      data.Add("client", tempId);
+      data.Add("client", m_tempClientId);
 
-      try
-      {
-        db.Insert("ServiceTicket", data);
-      }
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
-        this.Close();
-      }
+      m_queries.InsertQuery(data);
     }
 
-    private void databaseUpdate()
+    /// <summary>
+    /// Database update
+    /// </summary>
+    private void DatabaseUpdate()
     {
-      //Create Database object
-      SQLiteDatabase db = new SQLiteDatabase();
-      Dictionary<String, String> data = new Dictionary<string, string>();
+      Dictionary<string, string> data = new Dictionary<string, string>();
       data.Add("comments", tbVisitComments.Text.ToString());
 
       data.Add("callTaker", cbTakenBy.SelectedItem.ToString());
@@ -213,19 +203,9 @@ namespace ServiceTracker
 
       data.Add("visitTime", dtpTime.Value.ToShortTimeString());
       data.Add("visitDate", dtpDate.Value.ToShortDateString());
-      data.Add("client", tempId);
-      try
-      {
-        db.Update("ServiceTicket", data, String.Format("ServiceTicket.Id = {0}", lbTicketNumber.Text));
-      }
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
-        this.Close();
-      }
+      data.Add("client", m_tempClientId);
+
+      m_queries.UpdateQuery(data, lbTicketNumber.Text);      
     }
   }
 }
-

@@ -7,7 +7,6 @@
 // Jul 11, 2014     J. Parrish      Initial Implementation
 // </revisionHistory> 
 //-----------------------------------------------------------------------
-
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -23,9 +22,6 @@ namespace ServiceTracker
     /// <summary>Check for authentication errors</summary>
     private bool m_error = false;
 
-    /// <summary>Holder for the employee</summary>
-    public Worker Employee { get; set; }
-
     /// <summary>
     /// Initializes a new instance of the UserLogin class
     /// </summary>
@@ -34,6 +30,9 @@ namespace ServiceTracker
       InitializeComponent();
       Employee = new Worker();
     }
+
+    /// <summary>Gets or sets the employee</summary>
+    public Worker Employee { get; set; }
 
     /// <summary>
     /// Exit button event
@@ -61,9 +60,9 @@ namespace ServiceTracker
     private void LoginAction()
     {
       DatabaseQuery query = new DatabaseQuery();
-      Dictionary<string, Worker> queryReturn = query.QueryForAllWorkers();
+      Dictionary<string, Worker> queryReturn = query.QueryForAllWorkers(tbEmpID.Text);
 
-      if (queryReturn.ContainsKey(tbEmpID.Text))
+      if (queryReturn.Count != 0)
       {
         if (tbPassword.Text == queryReturn[tbEmpID.Text].Password)
         {

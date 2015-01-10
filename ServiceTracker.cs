@@ -15,114 +15,37 @@ using System.Windows.Forms;
 
 namespace ServiceTracker
 {
+  /// <summary>
+  /// Service tracker class
+  /// </summary>
   public partial class ServiceTracker : Form
   {
-    Session session = new Session();
+    /// <summary>Session object</summary>
+    private Session m_session = new Session();
 
+    /// <summary>Query object</summary>
+    private DatabaseQuery m_queries = new DatabaseQuery();
+
+    /// <summary>
+    /// Initializes a new instance of the ServiceTracker class
+    /// </summary>
     public ServiceTracker()
     {
       InitializeComponent();
 
       UserAuthentication();
 
-      #region TimeKeeper
-
-      //This code keeps the date and time updating
       tbDate.Text = DateTime.Now.ToLongDateString();
       tbTime.Text = DateTime.Now.ToLongTimeString();
       Timer tmr = new Timer();
-      tmr.Interval = 1000;//ticks every 1 second
+      tmr.Interval = 1000;
       tmr.Tick += new EventHandler(Timer_Elapsed);
       tmr.Start();
-
-      #endregion
     }
 
-    private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-      Application.Exit();
-    }
-
-    //Event for updating to time and date
-    private void Timer_Elapsed(object sender, EventArgs e)
-    {
-      tbTime.Text = DateTime.Now.ToLongTimeString();
-      tbDate.Text = DateTime.Now.ToLongDateString();
-    }
-
-    private void LoadManagerMainScreen()
-    {
-      MessageBox.Show("Login Success!", "Log In", MessageBoxButtons.OK);
-      lblWelcome.Text = "Welcome " + session.Employee.FirstName + " " + session.Employee.LastName;
-      lblTableDescription.Text = "Pending Ticket Closures";
-      btnUserTask1.Text = "Close Tickets";
-      btnUserTask2.Text = "Corrective Actions Needed";
-      btnUserTask3.Text = "Manage Employees";
-      //Manager Menu
-      closeTicketsToolStripMenuItem.Enabled = true;
-      correctiveActionsToolStripMenuItem.Enabled = true;
-      manageEmployeesToolStripMenuItem.Enabled = true;
-      //Technician Menu
-      completeVisitToolStripMenuItem.Enabled = true;
-      viewUnassignedVisitsToolStripMenuItem.Enabled = true;
-      statisticsToolStripMenuItem.Enabled = true;
-      //CSR Menu
-      viewClientsToolStripMenuItem1.Enabled = true;
-      scheduleVisitsToolStripMenuItem.Enabled = true;
-      addCorrectiveActionToolStripMenuItem.Enabled = true;
-
-      ManagerCloseUpdate();
-    }
-
-    private void LoadTechnicianMainScreen()
-    {
-      MessageBox.Show("Login Success!", "Log In", MessageBoxButtons.OK);
-      lblWelcome.Text = "Welcome " + session.Employee.FirstName + " " + session.Employee.LastName;
-      lblTableDescription.Text = "Pending Service Calls";
-      btnUserTask1.Text = "Complete Visit";
-      btnUserTask2.Text = "View Unassigned Visits";
-      btnUserTask3.Text = "Statistics";
-      //Manager Menu
-      closeTicketsToolStripMenuItem.Enabled = false;
-      correctiveActionsToolStripMenuItem.Enabled = false;
-      manageEmployeesToolStripMenuItem.Enabled = false;
-      //Technician Menu
-      completeVisitToolStripMenuItem.Enabled = true;
-      viewUnassignedVisitsToolStripMenuItem.Enabled = true;
-      statisticsToolStripMenuItem.Enabled = true;
-      //CSR Menu
-      viewClientsToolStripMenuItem1.Enabled = true;
-      scheduleVisitsToolStripMenuItem.Enabled = true;
-      addCorrectiveActionToolStripMenuItem.Enabled = true;
-
-      TechnicianPendingUpdate();
-    }
-
-    private void LoadCustServMainScreen()
-    {
-      MessageBox.Show("Login Success!", "Log In", MessageBoxButtons.OK);
-      lblWelcome.Text = "Welcome " + session.Employee.FirstName + " " + session.Employee.LastName;
-      lblTableDescription.Text = "Unassigned Service Calls";
-      btnUserTask1.Text = "View Clients";
-      btnUserTask2.Text = "Schedule Visits";
-      btnUserTask3.Text = "Add Corrective Action";
-      //Manager Menu
-      closeTicketsToolStripMenuItem.Enabled = false;
-      correctiveActionsToolStripMenuItem.Enabled = false;
-      manageEmployeesToolStripMenuItem.Enabled = false;
-      //Technician Menu
-      completeVisitToolStripMenuItem.Enabled = false;
-      viewUnassignedVisitsToolStripMenuItem.Enabled = false;
-      statisticsToolStripMenuItem.Enabled = false;
-      //CSR Menu
-      viewClientsToolStripMenuItem1.Enabled = true;
-      scheduleVisitsToolStripMenuItem.Enabled = true;
-      addCorrectiveActionToolStripMenuItem.Enabled = true;
-
-      CSRUnassignedUpdate();
-
-    }
-
+    /// <summary>
+    /// User authenticator
+    /// </summary>
     private void UserAuthentication()
     {
       UserLogin login = new UserLogin();
@@ -130,14 +53,14 @@ namespace ServiceTracker
 
       if (login.DialogResult == DialogResult.Yes)
       {
-        session.Employee = login.Employee;
-        session.StartSession(System.DateTime.Now.ToShortDateString(), System.DateTime.Now.ToLongTimeString());
+        m_session.Employee = login.Employee;
+        m_session.StartSession(System.DateTime.Now.ToShortDateString(), System.DateTime.Now.ToLongTimeString());
 
-        if (session.Employee.WorkerType == "Manager")
+        if (m_session.Employee.WorkerType == "Manager")
         {
           LoadManagerMainScreen();
         }
-        else if (session.Employee.WorkerType == "Technician")
+        else if (m_session.Employee.WorkerType == "Technician")
         {
           LoadTechnicianMainScreen();
         }
@@ -152,54 +75,82 @@ namespace ServiceTracker
       }
     }
 
-    private void btnUserTask1_Click(object sender, EventArgs e)
+    #region Events
+
+    /// <summary>
+    /// Exit strip item event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
     {
-      if (session.Employee.WorkerType == "Manager")
+      Application.Exit();
+    }
+
+    /// <summary>
+    /// Update time
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void Timer_Elapsed(object sender, EventArgs e)
+    {
+      tbTime.Text = DateTime.Now.ToLongTimeString();
+      tbDate.Text = DateTime.Now.ToLongDateString();
+    }
+
+    /// <summary>
+    /// User task 1 button event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnUserTask1_Click(object sender, EventArgs e)
+    {
+      if (m_session.Employee.WorkerType == "Manager")
       {
         InfoAccessor information = new InfoAccessor("CloseTicket");
         DialogResult dialogResult = information.ShowDialog();
 
         if (information.DialogResult == DialogResult.Yes)
         {
-          OpenTicketWindow(information.name, information.date);
+          OpenTicketWindow(information.NameOther, information.Date);
           ManagerCloseUpdate();
         }
         else if (information.DialogResult == DialogResult.OK)
         {
-          if (information.employee == true)
+          if (information.Employee == true)
           {
             OpenEmployeeWindow(null);
           }
-          if (information.client == true)
+
+          if (information.Client == true)
           {
             OpenClientWindow(null);
           }
         }
       }
-
-      else if (session.Employee.WorkerType == "Technician")
+      else if (m_session.Employee.WorkerType == "Technician")
       {
-        InfoAccessor information = new InfoAccessor("CompleteTicket", session.Employee.FirstName + " " + session.Employee.LastName);
+        InfoAccessor information = new InfoAccessor("CompleteTicket", m_session.Employee.FirstName + " " + m_session.Employee.LastName);
         DialogResult dialogResult = information.ShowDialog();
 
         if (information.DialogResult == DialogResult.Yes)
         {
-          OpenTicketWindow(information.name, information.date);
+          OpenTicketWindow(information.NameOther, information.Date);
           TechnicianPendingUpdate();
         }
         else if (information.DialogResult == DialogResult.OK)
         {
-          if (information.employee == true)
+          if (information.Employee == true)
           {
             OpenEmployeeWindow(null);
           }
-          if (information.client == true)
+
+          if (information.Client == true)
           {
             OpenClientWindow(null);
           }
         }
       }
-
       else
       {
         InfoAccessor information = new InfoAccessor("Client");
@@ -207,74 +158,79 @@ namespace ServiceTracker
 
         if (information.DialogResult == DialogResult.Yes)
         {
-          OpenClientWindow(information.name);
+          OpenClientWindow(information.NameOther);
           CSRUnassignedUpdate();
         }
         else if (information.DialogResult == DialogResult.OK)
         {
-          if (information.employee == true)
+          if (information.Employee == true)
           {
             OpenEmployeeWindow(null);
             CSRUnassignedUpdate();
           }
-          if (information.client == true)
+
+          if (information.Client == true)
           {
             OpenClientWindow(null);
             CSRUnassignedUpdate();
           }
         }
       }
-
     }
 
-    private void btnUserTask2_Click(object sender, EventArgs e)
+    /// <summary>
+    /// User task 2 button event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnUserTask2_Click(object sender, EventArgs e)
     {
-      if (session.Employee.WorkerType == "Manager")
+      if (m_session.Employee.WorkerType == "Manager")
       {
         InfoAccessor information = new InfoAccessor("Corrective");
         DialogResult dialogResult = information.ShowDialog();
 
         if (information.DialogResult == DialogResult.Yes)
         {
-          OpenEmployeeWindow(information.name);
+          OpenEmployeeWindow(information.NameOther);
           ManagerCloseUpdate();
         }
         else if (information.DialogResult == DialogResult.OK)
         {
-          if (information.employee == true)
+          if (information.Employee == true)
           {
             OpenEmployeeWindow(null);
           }
-          if (information.client == true)
+
+          if (information.Client == true)
           {
             OpenClientWindow(null);
           }
         }
       }
-
-      else if (session.Employee.WorkerType == "Technician")
+      else if (m_session.Employee.WorkerType == "Technician")
       {
         InfoAccessor information = new InfoAccessor("UnassignedTicket");
         DialogResult dialogResult = information.ShowDialog();
 
         if (information.DialogResult == DialogResult.Yes)
         {
-          OpenTicketWindow(information.name, information.date);
+          OpenTicketWindow(information.NameOther, information.Date);
           TechnicianPendingUpdate();
         }
         else if (information.DialogResult == DialogResult.OK)
         {
-          if (information.employee == true)
+          if (information.Employee == true)
           {
             OpenEmployeeWindow(null);
           }
-          if (information.client == true)
+
+          if (information.Client == true)
           {
             OpenClientWindow(null);
           }
         }
       }
-
       else
       {
         InfoAccessor information = new InfoAccessor("Client");
@@ -282,17 +238,18 @@ namespace ServiceTracker
 
         if (information.DialogResult == DialogResult.Yes)
         {
-          OpenClientWindow(information.name);
+          OpenClientWindow(information.NameOther);
           CSRUnassignedUpdate();
         }
         else if (information.DialogResult == DialogResult.OK)
         {
-          if (information.employee == true)
+          if (information.Employee == true)
           {
             OpenEmployeeWindow(null);
             CSRUnassignedUpdate();
           }
-          if (information.client == true)
+
+          if (information.Client == true)
           {
             OpenClientWindow(null);
             CSRUnassignedUpdate();
@@ -301,38 +258,41 @@ namespace ServiceTracker
       }
     }
 
-    private void btnUserTask3_Click(object sender, EventArgs e)
+    /// <summary>
+    /// User task 3 button event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnUserTask3_Click(object sender, EventArgs e)
     {
-      if (session.Employee.WorkerType == "Manager")
+      if (m_session.Employee.WorkerType == "Manager")
       {
         InfoAccessor information = new InfoAccessor("Employee");
         DialogResult dialogResult = information.ShowDialog();
 
         if (information.DialogResult == DialogResult.Yes)
         {
-          OpenEmployeeWindow(information.name);
+          OpenEmployeeWindow(information.NameOther);
           ManagerCloseUpdate();
         }
         else if (information.DialogResult == DialogResult.OK)
         {
-          if (information.employee == true)
+          if (information.Employee == true)
           {
             OpenEmployeeWindow(null);
           }
-          if (information.client == true)
+
+          if (information.Client == true)
           {
             OpenClientWindow(null);
           }
         }
       }
-
-
-      else if (session.Employee.WorkerType == "Technician")
+      else if (m_session.Employee.WorkerType == "Technician")
       {
         Statistics stats = new Statistics();
         DialogResult dialogResult = stats.ShowDialog();
       }
-
       else
       {
         InfoAccessor information = new InfoAccessor("Employee");
@@ -340,16 +300,17 @@ namespace ServiceTracker
 
         if (information.DialogResult == DialogResult.Yes)
         {
-          OpenEmployeeWindow(information.name);
+          OpenEmployeeWindow(information.NameOther);
           ManagerCloseUpdate();
         }
         else if (information.DialogResult == DialogResult.OK)
         {
-          if (information.employee == true)
+          if (information.Employee == true)
           {
             OpenEmployeeWindow(null);
           }
-          if (information.client == true)
+
+          if (information.Client == true)
           {
             OpenClientWindow(null);
           }
@@ -357,6 +318,374 @@ namespace ServiceTracker
       }
     }
 
+    /// <summary>
+    /// Logout menu item event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void LogOutToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      UserAuthentication();
+    }
+
+    #region ManagerMenu
+
+    /// <summary>
+    /// Close ticket menu item event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void CloseTicketsToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      if (m_session.Employee.WorkerType == "Manager")
+      {
+        InfoAccessor information = new InfoAccessor("CloseTicket");
+        DialogResult dialogResult = information.ShowDialog();
+
+        if (information.DialogResult == DialogResult.Yes)
+        {
+          OpenTicketWindow(information.NameOther, information.Date);
+          ManagerCloseUpdate();
+        }
+        else if (information.DialogResult == DialogResult.OK)
+        {
+          if (information.Employee == true)
+          {
+            OpenEmployeeWindow(null);
+          }
+
+          if (information.Client == true)
+          {
+            OpenClientWindow(null);
+          }
+        }
+      }
+    }
+
+    /// <summary>
+    /// Corrective actions menu item event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void CorrectiveActionsToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      InfoAccessor information = new InfoAccessor("Corrective");
+      DialogResult dialogResult = information.ShowDialog();
+
+      if (information.DialogResult == DialogResult.Yes)
+      {
+        OpenEmployeeWindow(information.NameOther);
+        ManagerCloseUpdate();
+      }
+      else if (information.DialogResult == DialogResult.OK)
+      {
+        if (information.Employee == true)
+        {
+          OpenEmployeeWindow(null);
+        }
+
+        if (information.Client == true)
+        {
+          OpenClientWindow(null);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Manage employees menu item click event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void ManageEmployeesToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      InfoAccessor information = new InfoAccessor("Employee");
+      DialogResult dialogResult = information.ShowDialog();
+
+      if (information.DialogResult == DialogResult.Yes)
+      {
+        OpenEmployeeWindow(information.NameOther);
+        ManagerCloseUpdate();
+      }
+      else if (information.DialogResult == DialogResult.OK)
+      {
+        if (information.Employee == true)
+        {
+          OpenEmployeeWindow(null);
+        }
+
+        if (information.Client == true)
+        {
+          OpenClientWindow(null);
+        }
+      }
+    }
+
+    #endregion
+
+    #region TechnicianMenu
+
+    /// <summary>
+    /// Complete visit menu item event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void CompleteVisitToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      InfoAccessor information = new InfoAccessor("CompleteTicket", m_session.Employee.FirstName + " " + m_session.Employee.LastName);
+      DialogResult dialogResult = information.ShowDialog();
+
+      if (information.DialogResult == DialogResult.Yes)
+      {
+        OpenTicketWindow(information.NameOther, information.Date);
+        TechnicianPendingUpdate();
+      }
+      else if (information.DialogResult == DialogResult.OK)
+      {
+        if (information.Employee == true)
+        {
+          OpenEmployeeWindow(null);
+        }
+
+        if (information.Client == true)
+        {
+          OpenClientWindow(null);
+        }
+      }
+    }
+
+    /// <summary>
+    /// View unassigned visits menu item event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void ViewUnassignedVisitsToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      InfoAccessor information = new InfoAccessor("UnassignedTicket");
+      DialogResult dialogResult = information.ShowDialog();
+
+      if (information.DialogResult == DialogResult.Yes)
+      {
+        OpenTicketWindow(information.NameOther, information.Date);
+        TechnicianPendingUpdate();
+      }
+      else if (information.DialogResult == DialogResult.OK)
+      {
+        if (information.Employee == true)
+        {
+          OpenEmployeeWindow(null);
+        }
+
+        if (information.Client == true)
+        {
+          OpenClientWindow(null);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Statistics menu item event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void StatisticsToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      Statistics stats = new Statistics();
+      DialogResult dialogResult = stats.ShowDialog();
+    }
+
+    #endregion
+
+    #region CSRMenu
+
+    /// <summary>
+    /// View clients menu item event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void ViewClientsToolStripMenuItem1_Click(object sender, EventArgs e)
+    {
+      InfoAccessor information = new InfoAccessor("Client");
+      DialogResult dialogResult = information.ShowDialog();
+
+      if (information.DialogResult == DialogResult.Yes)
+      {
+        OpenClientWindow(information.NameOther);
+        CSRUnassignedUpdate();
+      }
+      else if (information.DialogResult == DialogResult.OK)
+      {
+        if (information.Employee == true)
+        {
+          OpenEmployeeWindow(null);
+          CSRUnassignedUpdate();
+        }
+
+        if (information.Client == true)
+        {
+          OpenClientWindow(null);
+          CSRUnassignedUpdate();
+        }
+      }
+    }
+
+    /// <summary>
+    /// Schedule visits menu item event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void ScheduleVisitsToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      InfoAccessor information = new InfoAccessor("Client");
+      DialogResult dialogResult = information.ShowDialog();
+
+      if (information.DialogResult == DialogResult.Yes)
+      {
+        OpenClientWindow(information.NameOther);
+        CSRUnassignedUpdate();
+      }
+      else if (information.DialogResult == DialogResult.OK)
+      {
+        if (information.Employee == true)
+        {
+          OpenEmployeeWindow(null);
+          CSRUnassignedUpdate();
+        }
+
+        if (information.Client == true)
+        {
+          OpenClientWindow(null);
+          CSRUnassignedUpdate();
+        }
+      }
+    }
+
+    /// <summary>
+    /// Add corrective action menu item event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void AddCorrectiveActionToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      InfoAccessor information = new InfoAccessor("Employee");
+      DialogResult dialogResult = information.ShowDialog();
+
+      if (information.DialogResult == DialogResult.Yes)
+      {
+        OpenEmployeeWindow(information.NameOther);
+        CSRUnassignedUpdate();
+      }
+      else if (information.DialogResult == DialogResult.OK)
+      {
+        if (information.Employee == true)
+        {
+          OpenEmployeeWindow(null);
+          CSRUnassignedUpdate();
+        }
+
+        if (information.Client == true)
+        {
+          OpenClientWindow(null);
+          CSRUnassignedUpdate();
+        }
+      }
+    }
+
+    #endregion
+
+    #endregion
+
+    #region LoadingScreens
+
+    /// <summary>
+    /// Load manager main screen
+    /// </summary>
+    private void LoadManagerMainScreen()
+    {
+      MessageBox.Show("Login Success!", "Log In", MessageBoxButtons.OK);
+      lblWelcome.Text = "Welcome " + m_session.Employee.FirstName + " " + m_session.Employee.LastName;
+      lblTableDescription.Text = "Pending Ticket Closures";
+      btnUserTask1.Text = "Close Tickets";
+      btnUserTask2.Text = "Corrective Actions Needed";
+      btnUserTask3.Text = "Manage Employees";
+      //// Manager Menu
+      closeTicketsToolStripMenuItem.Enabled = true;
+      correctiveActionsToolStripMenuItem.Enabled = true;
+      manageEmployeesToolStripMenuItem.Enabled = true;
+      //// Technician Menu
+      completeVisitToolStripMenuItem.Enabled = true;
+      viewUnassignedVisitsToolStripMenuItem.Enabled = true;
+      statisticsToolStripMenuItem.Enabled = true;
+      //// CSR Menu
+      viewClientsToolStripMenuItem1.Enabled = true;
+      scheduleVisitsToolStripMenuItem.Enabled = true;
+      addCorrectiveActionToolStripMenuItem.Enabled = true;
+
+      ManagerCloseUpdate();
+    }
+
+    /// <summary>
+    /// Load technician main screen
+    /// </summary>
+    private void LoadTechnicianMainScreen()
+    {
+      MessageBox.Show("Login Success!", "Log In", MessageBoxButtons.OK);
+      lblWelcome.Text = "Welcome " + m_session.Employee.FirstName + " " + m_session.Employee.LastName;
+      lblTableDescription.Text = "Pending Service Calls";
+      btnUserTask1.Text = "Complete Visit";
+      btnUserTask2.Text = "View Unassigned Visits";
+      btnUserTask3.Text = "Statistics";
+      //// Manager Menu
+      closeTicketsToolStripMenuItem.Enabled = false;
+      correctiveActionsToolStripMenuItem.Enabled = false;
+      manageEmployeesToolStripMenuItem.Enabled = false;
+      //// Technician Menu
+      completeVisitToolStripMenuItem.Enabled = true;
+      viewUnassignedVisitsToolStripMenuItem.Enabled = true;
+      statisticsToolStripMenuItem.Enabled = true;
+      //// CSR Menu
+      viewClientsToolStripMenuItem1.Enabled = true;
+      scheduleVisitsToolStripMenuItem.Enabled = true;
+      addCorrectiveActionToolStripMenuItem.Enabled = true;
+
+      TechnicianPendingUpdate();
+    }
+
+    /// <summary>
+    /// Load CSR main screen
+    /// </summary>
+    private void LoadCustServMainScreen()
+    {
+      MessageBox.Show("Login Success!", "Log In", MessageBoxButtons.OK);
+      lblWelcome.Text = "Welcome " + m_session.Employee.FirstName + " " + m_session.Employee.LastName;
+      lblTableDescription.Text = "Unassigned Service Calls";
+      btnUserTask1.Text = "View Clients";
+      btnUserTask2.Text = "Schedule Visits";
+      btnUserTask3.Text = "Add Corrective Action";
+      //// Manager Menu
+      closeTicketsToolStripMenuItem.Enabled = false;
+      correctiveActionsToolStripMenuItem.Enabled = false;
+      manageEmployeesToolStripMenuItem.Enabled = false;
+      //// Technician Menu
+      completeVisitToolStripMenuItem.Enabled = false;
+      viewUnassignedVisitsToolStripMenuItem.Enabled = false;
+      statisticsToolStripMenuItem.Enabled = false;
+      //// CSR Menu
+      viewClientsToolStripMenuItem1.Enabled = true;
+      scheduleVisitsToolStripMenuItem.Enabled = true;
+      addCorrectiveActionToolStripMenuItem.Enabled = true;
+
+      CSRUnassignedUpdate();
+    }
+
+    #endregion
+
+    #region OpenWindows
+
+    /// <summary>
+    /// Open window for tickets
+    /// </summary>
+    /// <param name="name">Client name</param>
+    /// <param name="date">Ticket date</param>
     private void OpenTicketWindow(string name, string date)
     {
       ServiceCallGUI serviceCall = new ServiceCallGUI(name, date);
@@ -364,17 +693,21 @@ namespace ServiceTracker
 
       if (serviceCall.DialogResult == DialogResult.Yes)
       {
-        if (session.Employee.WorkerType == "Manager")
+        if (m_session.Employee.WorkerType == "Manager")
         {
           ManagerCloseUpdate();
         }
-        else if (session.Employee.WorkerType == "Technician")
+        else if (m_session.Employee.WorkerType == "Technician")
         {
           TechnicianPendingUpdate();
         }
       }
     }
 
+    /// <summary>
+    /// Open window for employees
+    /// </summary>
+    /// <param name="name">Employee name</param>
     private void OpenEmployeeWindow(string name)
     {
       AddEmployee employee = new AddEmployee(name);
@@ -386,6 +719,10 @@ namespace ServiceTracker
       }
     }
 
+    /// <summary>
+    /// Open window for clients
+    /// </summary>
+    /// <param name="name">Client name</param>
     private void OpenClientWindow(string name)
     {
       AddClient client = new AddClient(name);
@@ -393,7 +730,7 @@ namespace ServiceTracker
 
       if (client.DialogResult == DialogResult.Yes)
       {
-        switch (session.Employee.WorkerType)
+        switch (m_session.Employee.WorkerType)
         {
           case "Manager":
             ManagerCloseUpdate();
@@ -404,373 +741,121 @@ namespace ServiceTracker
           default:
             break;
         }
-
-      }
-    }
-
-    #region ManagerMenu
-
-    private void closeTicketsToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-      if (session.Employee.WorkerType == "Manager")
-      {
-        InfoAccessor information = new InfoAccessor("CloseTicket");
-        DialogResult dialogResult = information.ShowDialog();
-
-        if (information.DialogResult == DialogResult.Yes)
-        {
-          OpenTicketWindow(information.name, information.date);
-          ManagerCloseUpdate();
-        }
-        else if (information.DialogResult == DialogResult.OK)
-        {
-          if (information.employee == true)
-          {
-            OpenEmployeeWindow(null);
-          }
-          if (information.client == true)
-          {
-            OpenClientWindow(null);
-          }
-        }
-      }
-    }
-
-    private void correctiveActionsToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-      InfoAccessor information = new InfoAccessor("Corrective");
-      DialogResult dialogResult = information.ShowDialog();
-
-      if (information.DialogResult == DialogResult.Yes)
-      {
-        OpenEmployeeWindow(information.name);
-        ManagerCloseUpdate();
-      }
-      else if (information.DialogResult == DialogResult.OK)
-      {
-        if (information.employee == true)
-        {
-          OpenEmployeeWindow(null);
-        }
-        if (information.client == true)
-        {
-          OpenClientWindow(null);
-        }
-      }
-    }
-
-    private void manageEmployeesToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-      InfoAccessor information = new InfoAccessor("Employee");
-      DialogResult dialogResult = information.ShowDialog();
-
-      if (information.DialogResult == DialogResult.Yes)
-      {
-        OpenEmployeeWindow(information.name);
-        ManagerCloseUpdate();
-      }
-      else if (information.DialogResult == DialogResult.OK)
-      {
-        if (information.employee == true)
-        {
-          OpenEmployeeWindow(null);
-        }
-        if (information.client == true)
-        {
-          OpenClientWindow(null);
-        }
       }
     }
 
     #endregion
 
-    #region TechnicianMenu
+    #region DatagridUpdaters
 
-    private void completeVisitToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-      InfoAccessor information = new InfoAccessor("CompleteTicket", session.Employee.FirstName + " " + session.Employee.LastName);
-      DialogResult dialogResult = information.ShowDialog();
-
-      if (information.DialogResult == DialogResult.Yes)
-      {
-        OpenTicketWindow(information.name, information.date);
-        TechnicianPendingUpdate();
-      }
-      else if (information.DialogResult == DialogResult.OK)
-      {
-        if (information.employee == true)
-        {
-          OpenEmployeeWindow(null);
-        }
-        if (information.client == true)
-        {
-          OpenClientWindow(null);
-        }
-      }
-    }
-
-    private void viewUnassignedVisitsToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-      InfoAccessor information = new InfoAccessor("UnassignedTicket");
-      DialogResult dialogResult = information.ShowDialog();
-
-      if (information.DialogResult == DialogResult.Yes)
-      {
-        OpenTicketWindow(information.name, information.date);
-        TechnicianPendingUpdate();
-      }
-      else if (information.DialogResult == DialogResult.OK)
-      {
-        if (information.employee == true)
-        {
-          OpenEmployeeWindow(null);
-        }
-        if (information.client == true)
-        {
-          OpenClientWindow(null);
-        }
-      }
-    }
-
-    private void statisticsToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-      Statistics stats = new Statistics();
-      DialogResult dialogResult = stats.ShowDialog();
-    }
-
-    #endregion
-
-    #region CSRMenu
-
-    private void viewClientsToolStripMenuItem1_Click(object sender, EventArgs e)
-    {
-      InfoAccessor information = new InfoAccessor("Client");
-      DialogResult dialogResult = information.ShowDialog();
-
-      if (information.DialogResult == DialogResult.Yes)
-      {
-        //Take client number, then use it to find the info for the specified client
-        OpenClientWindow(information.name);
-        CSRUnassignedUpdate();
-      }
-      else if (information.DialogResult == DialogResult.OK)
-      {
-        if (information.employee == true)
-        {
-          OpenEmployeeWindow(null);
-          CSRUnassignedUpdate();
-        }
-        if (information.client == true)
-        {
-          OpenClientWindow(null);
-          CSRUnassignedUpdate();
-        }
-      }
-    }
-
-    private void scheduleVisitsToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-      InfoAccessor information = new InfoAccessor("Client");
-      DialogResult dialogResult = information.ShowDialog();
-
-      if (information.DialogResult == DialogResult.Yes)
-      {
-        OpenClientWindow(information.name);
-        CSRUnassignedUpdate();
-      }
-      else if (information.DialogResult == DialogResult.OK)
-      {
-        if (information.employee == true)
-        {
-          OpenEmployeeWindow(null);
-          CSRUnassignedUpdate();
-        }
-        if (information.client == true)
-        {
-          OpenClientWindow(null);
-          CSRUnassignedUpdate();
-        }
-      }
-    }
-
-    private void addCorrectiveActionToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-      InfoAccessor information = new InfoAccessor("Employee");
-      DialogResult dialogResult = information.ShowDialog();
-
-      if (information.DialogResult == DialogResult.Yes)
-      {
-        //Take employee number, then use it to find the info for the specified employee
-        OpenEmployeeWindow(information.name);
-        CSRUnassignedUpdate();
-      }
-      else if (information.DialogResult == DialogResult.OK)
-      {
-        if (information.employee == true)
-        {
-          OpenEmployeeWindow(null);
-          CSRUnassignedUpdate();
-        }
-        if (information.client == true)
-        {
-          OpenClientWindow(null);
-          CSRUnassignedUpdate();
-        }
-      }
-    }
-
-    #endregion
-
+    /// <summary>
+    /// Manager grid updater
+    /// </summary>
     private void ManagerCloseUpdate()
     {
       dgvUserData.Rows.Clear();
 
-      SQLiteDatabase db;
+      Dictionary<int, Client> clients = m_queries.QueryForAllClients(-1);
+      Dictionary<int, ServiceCall> tickets = m_queries.QueryForAllServiceCalls(clients);
 
-      try
+      foreach (KeyValuePair<int, ServiceCall> pair in tickets)
       {
-        db = new SQLiteDatabase();
-        DataTable tickets;
-        DataTable clients;
-
-        String ticketQuery = "select * from ServiceTicket";
-        String clientQuery = "select * from Client";
-        tickets = db.GetDataTable(ticketQuery);
-        clients = db.GetDataTable(clientQuery);
-
-        foreach (DataRow r in tickets.Rows)
+        if (pair.Value.JobStatus == "Visit Completed")
         {
-          if (r["status"].ToString() == "Visit Completed")
+          DataGridViewRow row = new DataGridViewRow();
+          row.CreateCells(dgvUserData);
+          foreach (KeyValuePair<int, Client> pairOther in clients)
           {
-            DataGridViewRow row = new DataGridViewRow();
-            row.CreateCells(dgvUserData);
-            foreach (DataRow rw in clients.Rows)
+            if (pair.Value.ClientId == pairOther.Value.Id)
             {
-              //Add Ticket to be closed
-              if (r["client"].ToString() == rw["id"].ToString())
-              {
-                row.Cells[0].Value = rw["firstName"].ToString() + " " + rw["lastName"].ToString();
-              }
+              row.Cells[0].Value = pairOther.Value.FirstName + " " + pairOther.Value.LastName;
             }
-            row.Cells[1].Value = r["visitDate"].ToString();
-            row.Cells[2].Value = r["visitTime"].ToString();
-            dgvUserData.Rows.Add(row);
-            dgvUserData.AutoResizeColumns();
-            dgvUserData.Sort(dgvUserData.Columns[1], ListSortDirection.Ascending);
           }
+
+          row.Cells[1].Value = pair.Value.Date;
+          row.Cells[2].Value = pair.Value.Time;
+          dgvUserData.Rows.Add(row);
+          dgvUserData.AutoResizeColumns();
+          dgvUserData.Sort(dgvUserData.Columns[1], ListSortDirection.Ascending);
         }
       }
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
-      }
+      
       dgvUserData.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
     }
 
+    /// <summary>
+    /// Technician grid updater
+    /// </summary>
     private void TechnicianPendingUpdate()
     {
       dgvUserData.Rows.Clear();
 
-      SQLiteDatabase db;
+      Dictionary<int, Client> clients = m_queries.QueryForAllClients(-1);
+      Dictionary<int, ServiceCall> tickets = m_queries.QueryForAllServiceCalls(clients);
 
-      try
+      foreach (KeyValuePair<int, ServiceCall> pair in tickets)
       {
-        db = new SQLiteDatabase();
-        DataTable tickets;
-        DataTable clients;
-
-        String ticketQuery = "select * from ServiceTicket";
-        String clientQuery = "select * from Client";
-        tickets = db.GetDataTable(ticketQuery);
-        clients = db.GetDataTable(clientQuery);
-
-        foreach (DataRow r in tickets.Rows)
+        if (pair.Value.JobStatus == "Assigned")
         {
-          if (r["status"].ToString() == "Assigned")
-          {
-            if (r["assignedTech"].ToString() == session.Employee.FirstName + " " + session.Employee.LastName)
-            {
-              DataGridViewRow row = new DataGridViewRow();
-              row.CreateCells(dgvUserData);
-              foreach (DataRow rw in clients.Rows)
-              {
-                //Add Ticket to be closed
-                if (r["client"].ToString() == rw["id"].ToString())
-                {
-                  row.Cells[0].Value = rw["firstName"].ToString() + " " + rw["lastName"].ToString();
-                }
-              }
-              row.Cells[1].Value = r["visitDate"].ToString();
-              row.Cells[2].Value = r["visitTime"].ToString();
-              dgvUserData.Rows.Add(row);
-              dgvUserData.AutoResizeColumns();
-              dgvUserData.Sort(dgvUserData.Columns[1], ListSortDirection.Ascending);
-            }
-          }
-        }
-      }
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
-      }
-      dgvUserData.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-    }
-
-    private void CSRUnassignedUpdate()
-    {
-      dgvUserData.Rows.Clear();
-
-      SQLiteDatabase db;
-
-      try
-      {
-        db = new SQLiteDatabase();
-        DataTable tickets;
-        DataTable clients;
-
-        String ticketQuery = "select * from ServiceTicket";
-        String clientQuery = "select * from Client";
-        tickets = db.GetDataTable(ticketQuery);
-        clients = db.GetDataTable(clientQuery);
-
-        foreach (DataRow r in tickets.Rows)
-        {
-          if (r["status"].ToString() == "Unassigned")
+          if (pair.Value.Tech == m_session.Employee.FirstName + " " + m_session.Employee.LastName)
           {
             DataGridViewRow row = new DataGridViewRow();
             row.CreateCells(dgvUserData);
-            foreach (DataRow rw in clients.Rows)
+            foreach (KeyValuePair<int, Client> pairOther in clients)
             {
-              //Add Ticket to be closed
-              if (r["client"].ToString() == rw["id"].ToString())
+              if (pair.Value.ClientId == pairOther.Value.Id)
               {
-                row.Cells[0].Value = rw["firstName"].ToString() + " " + rw["lastName"].ToString();
+                row.Cells[0].Value = pairOther.Value.FirstName + " " + pairOther.Value.LastName;
               }
             }
-            row.Cells[1].Value = r["visitDate"].ToString();
-            row.Cells[2].Value = r["visitTime"].ToString();
+
+            row.Cells[1].Value = pair.Value.Date;
+            row.Cells[2].Value = pair.Value.Time;
             dgvUserData.Rows.Add(row);
             dgvUserData.AutoResizeColumns();
             dgvUserData.Sort(dgvUserData.Columns[1], ListSortDirection.Ascending);
           }
         }
       }
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
-      }
+
       dgvUserData.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
     }
 
-    private void logOutToolStripMenuItem_Click(object sender, EventArgs e)
+    /// <summary>
+    /// CSR grid updater
+    /// </summary>
+    private void CSRUnassignedUpdate()
     {
-      UserAuthentication();
+      dgvUserData.Rows.Clear();
+
+      Dictionary<int, Client> clients = m_queries.QueryForAllClients(-1);
+      Dictionary<int, ServiceCall> tickets = m_queries.QueryForAllServiceCalls(clients);
+
+      foreach (KeyValuePair<int, ServiceCall> pair in tickets)
+      {
+        if (pair.Value.JobStatus == "Unassigned")
+        {
+          DataGridViewRow row = new DataGridViewRow();
+          row.CreateCells(dgvUserData);
+          foreach (KeyValuePair<int, Client> pairOther in clients)
+          {
+            if (pair.Value.ClientId == pairOther.Value.Id)
+            {
+              row.Cells[0].Value = pairOther.Value.FirstName + " " + pairOther.Value.LastName;
+            }
+          }
+
+          row.Cells[1].Value = pair.Value.Date;
+          row.Cells[2].Value = pair.Value.Time;
+          dgvUserData.Rows.Add(row);
+          dgvUserData.AutoResizeColumns();
+          dgvUserData.Sort(dgvUserData.Columns[1], ListSortDirection.Ascending);
+        }
+      }
+
+      dgvUserData.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
     }
+
+    #endregion
   }
 }

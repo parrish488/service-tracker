@@ -7,7 +7,6 @@
 // Jul 11, 2014     J. Parrish      Initial Implementation
 // </revisionHistory> 
 //-----------------------------------------------------------------------
-
 using System;
 
 namespace ServiceTracker
@@ -51,5 +50,10 @@ namespace ServiceTracker
     /// Gets or sets corrective actions
     /// </summary>
     public string CorrectiveActions { get; set; }
+
+    /// <summary>
+    /// Gets or sets action status
+    /// </summary>
+    public string ActionStatus { get; set; }
   }
 }

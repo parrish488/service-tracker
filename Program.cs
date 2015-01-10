@@ -1,15 +1,27 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+// <copyright file="Program.cs" company="ParrishCorp">
+//     Copyright (c) ParrishCorp. All rights reserved.
+// </copyright>
+//
+// <revisionHistory> 
+// Jul 11, 2014     J. Parrish      Initial Implementation
+// </revisionHistory> 
+//-----------------------------------------------------------------------
+using System;
 using System.Windows.Forms;
 
 namespace ServiceTracker
 {
-  static class Program
+  /// <summary>
+  /// Program class
+  /// </summary>
+  public static class Program
   {
     /// <summary>
     /// The main entry point for the application.
     /// </summary>
     [STAThread]
-    static void Main()
+    public static void Main()
     {
       Application.EnableVisualStyles();
       Application.SetCompatibleTextRenderingDefault(false);

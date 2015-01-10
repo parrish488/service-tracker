@@ -1,211 +1,190 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+// <copyright file="AddClient.cs" company="ParrishCorp">
+//     Copyright (c) ParrishCorp. All rights reserved.
+// </copyright>
+//
+// <revisionHistory> 
+// Jul 11, 2014     J. Parrish      Initial Implementation
+// </revisionHistory> 
+//-----------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Windows.Forms;
 
 namespace ServiceTracker
 {
+  /// <summary>
+  /// User interface for adding and editing a client
+  /// </summary>
   public partial class AddClient : Form
   {
-    Client client = new Client();
-    String tempClientId;
+    /// <summary>Client to be added</summary>
+    private Client m_client = new Client();
+
+    /// <summary>Temporary client ID</summary>
+    private string m_tempClientId;
+
+    /// <summary>Database query object</summary>
+    private DatabaseQuery m_queries = new DatabaseQuery();
+
+    /// <summary>
+    /// Initializes a new instance of the AddClient class
+    /// </summary>
     public AddClient()
     {
       InitializeComponent();
     }
 
+    /// <summary>
+    /// Initializes a new instance of the AddClient class
+    /// </summary>
+    /// <param name="clientName">Client to find</param>
     public AddClient(string clientName)
     {
       InitializeComponent();
 
-      //send clients name to be queried.
+      // send clients name to be queried.
       if (clientName != null)
       {
         Query_Customer(clientName);
         btnAddCall.Enabled = true;
         btnEdit.Enabled = true;
       }
-
-
     }
 
-    private void btnSubmit_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Button event for submit button
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnSubmit_Click(object sender, EventArgs e)
     {
-
-      //Check to make sure that no required textbox is empty.
-      if (tbFirstName.Text != "" && tbLastName.Text != "" && tbPhone.Text != "" && tbAddress.Text != "")
+      // Check to make sure that no required textbox is empty.
+      if (tbFirstName.Text != string.Empty && tbLastName.Text != string.Empty 
+        && tbPhone.Text != string.Empty && tbAddress.Text != string.Empty)
       {
-
-        if (lblNumber.Text != "")
+        if (lblNumber.Text != string.Empty)
         {
-          //run query to update client if they already exist
+          // run query to update client if they already exist
           Update_Client();
           DialogResult = DialogResult.Yes;
         }
         else
         {
-          //run add query to add client info to database
+          // run add query to add client info to database
           Insert_Client();
           DialogResult = DialogResult.Yes;
         }
-
       }
-
     }
 
-    private void btnAddCall_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Button event for adding a service call
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnAddCall_Click(object sender, EventArgs e)
     {
-      ServiceCallGUI ticket = new ServiceCallGUI(tempClientId);
+      ServiceCallGUI ticket = new ServiceCallGUI(m_tempClientId);
       DialogResult dialogResult = ticket.ShowDialog();
 
       if (ticket.DialogResult == DialogResult.Yes)
       {
         lbServiceCalls.Items.Clear();
-        SQLiteDatabase db;
 
-        try
+        Dictionary<int, ServiceCall> tickets = m_queries.QueryForAllServiceCalls(m_queries.QueryForAllClients(-1));
+
+        foreach (KeyValuePair<int, ServiceCall> pair in tickets)
         {
-          db = new SQLiteDatabase();
-
-          DataTable tickets;
-
-          String ticketQuery = "select * from ServiceTicket";
-
-          tickets = db.GetDataTable(ticketQuery);
-
-          foreach (DataRow row in tickets.Rows)
+          if (pair.Value.ClientId.ToString() == lblNumber.Text.ToString())
           {
-            if (row["client"].ToString() == lblNumber.Text.ToString())
-            {
-              lbServiceCalls.Items.Add(row["visitDate"].ToString() + " @ " + row["visitTime"].ToString());
-            }
+            lbServiceCalls.Items.Add(pair.Value.Date + " @ " + pair.Value.Time);
           }
-        }
-        catch (Exception fail)
-        {
-          String error = "The following error has occurred:\n\n";
-          error += fail.Message.ToString() + "\n\n";
-          MessageBox.Show(error);
         }
       }
       else
       {
-        //Do nothing?
+        // Do nothing?
       }
     }
 
-    private void btnCancel_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Button event for cancel button
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnCancel_Click(object sender, EventArgs e)
     {
       DialogResult = DialogResult.No;
     }
 
-    public void Insert_Client()
+    /// <summary>
+    /// Insert a new client
+    /// </summary>
+    private void Insert_Client()
     {
-      SQLiteDatabase db;
+      Dictionary<string, string> data = new Dictionary<string, string>();
 
-      try
-      {
-        db = new SQLiteDatabase();
-        //DataTable Clients;
-
-        String command = "INSERT INTO Client (firstName,lastName,address,phone)";
-        command += " VALUES ('" + tbFirstName.Text + "','" + tbLastName.Text + "','" + tbAddress.Text + "','" + tbPhone.Text + "');";
-
-        db.ExecuteNonQuery(command);
-
-        MessageBox.Show("Client successfully added.");
-        DialogResult = DialogResult.Yes;
-      }
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
-      }
-    }
-
-    public void Query_Customer(string name)
-    {
-      SQLiteDatabase db;
-
-      try
-      {
-        db = new SQLiteDatabase();
-        DataTable clients;
-        DataTable tickets;
-
-        String clientQuery = "SELECT * FROM Client";
-        String ticketQuery = "select * from ServiceTicket";
-
-        clients = db.GetDataTable(clientQuery);
-        tickets = db.GetDataTable(ticketQuery);
-
-        foreach (DataRow r in clients.Rows)
-        {
-          if ((r["firstName"].ToString() + " " + r["lastName"].ToString()) == name)
-          {
-            lblNumber.Text = r["id"].ToString();
-            tbFirstName.Text = r["firstName"].ToString();
-            tbLastName.Text = r["lastName"].ToString();
-            tbAddress.Text = r["address"].ToString();
-            tbPhone.Text = r["phone"].ToString();
-            tempClientId = r["id"].ToString();
-
-            foreach (DataRow row in tickets.Rows)
-            {
-              if (row["client"].ToString() == r["id"].ToString())
-              {
-                lbServiceCalls.Items.Add(row["visitDate"].ToString() + " @ " + row["visitTime"].ToString());
-              }
-            }
-          }
-        }
-      }
-
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
-      }
-    }
-
-    public void Query_Customer(int customer_id)
-    {
-      //SELECT firstName,lastName,address,phone
-      //FROM Client
-      //WHERE id = '1';
-    }
-
-    public void Update_Client()
-    {
-      //Create Database object
-      SQLiteDatabase db = new SQLiteDatabase();
-      Dictionary<String, String> data = new Dictionary<string, string>();
       data.Add("firstName", tbFirstName.Text);
       data.Add("lastName", tbLastName.Text);
       data.Add("address", tbAddress.Text);
       data.Add("phone", tbPhone.Text);
 
-      try
-      {
-        db.Update("Client", data, String.Format("Client.id = {0}", lblNumber.Text));
-      }
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
-        this.Close();
-      }
+      m_queries.InsertQuery(data);
     }
 
-    private void AddClient_Load(object sender, EventArgs e)
+    /// <summary>
+    /// Query for customer by name
+    /// </summary>
+    /// <param name="name">Customer name</param>
+    private void Query_Customer(string name)
     {
+      Dictionary<int, Client> clients = m_queries.QueryForAllClients(-1);
+      Dictionary<int, ServiceCall> tickets = m_queries.QueryForAllServiceCalls(clients);
 
+      foreach (KeyValuePair<int, Client> pair in clients)
+      {
+        if ((pair.Value.FirstName + " " + pair.Value.LastName) == name)
+        {
+          lblNumber.Text = pair.Value.Id.ToString();
+          tbFirstName.Text = pair.Value.FirstName;
+          tbLastName.Text = pair.Value.LastName;
+          tbAddress.Text = pair.Value.Address;
+          tbPhone.Text = pair.Value.PhoneNumber;
+          m_tempClientId = pair.Value.Id.ToString();
+
+          foreach (KeyValuePair<int, ServiceCall> pairOther in tickets)
+          {
+            if (pairOther.Value.ClientId == pair.Value.Id)
+            {
+              lbServiceCalls.Items.Add(pairOther.Value.Date + " @ " + pairOther.Value.Time);
+            }
+          }
+        }
+      }
     }
 
-    private void btnEdit_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Update client
+    /// </summary>
+    private void Update_Client()
+    {
+      Dictionary<string, string> data = new Dictionary<string, string>();
+      data.Add("firstName", tbFirstName.Text);
+      data.Add("lastName", tbLastName.Text);
+      data.Add("address", tbAddress.Text);
+      data.Add("phone", tbPhone.Text);
+
+      m_queries.UpdateQuery(data, lblNumber.Text);
+    }
+
+    /// <summary>
+    /// Button event for edit button
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnEdit_Click(object sender, EventArgs e)
     {
       if (lbServiceCalls.SelectedItems.Count == 0)
       {
@@ -213,38 +192,22 @@ namespace ServiceTracker
       }
       else
       {
-        ServiceCallGUI ticket = new ServiceCallGUI(tempClientId, lbServiceCalls.SelectedItem.ToString());
+        string[] segments = lbServiceCalls.SelectedItem.ToString().Split(' ');
+        ServiceCallGUI ticket = new ServiceCallGUI(m_tempClientId, segments[0]);
         DialogResult dialogResult = ticket.ShowDialog();
 
         if (ticket.DialogResult == DialogResult.Yes)
         {
           lbServiceCalls.Items.Clear();
-          SQLiteDatabase db;
 
-          try
+          Dictionary<int, ServiceCall> tickets = m_queries.QueryForAllServiceCalls(m_queries.QueryForAllClients(-1));
+
+          foreach (KeyValuePair<int, ServiceCall> pair in tickets)
           {
-            db = new SQLiteDatabase();
-
-            DataTable tickets;
-
-            String ticketQuery = "select * from ServiceTicket";
-
-            tickets = db.GetDataTable(ticketQuery);
-
-            foreach (DataRow row in tickets.Rows)
+            if (pair.Value.ClientId.ToString() == lblNumber.Text)
             {
-              if (row["client"].ToString() == lblNumber.Text.ToString())
-              {
-                lbServiceCalls.Items.Add(row["visitDate"].ToString() + " @ " + row["visitTime"].ToString());
-              }
+              lbServiceCalls.Items.Add(pair.Value.Date + " @ " + pair.Value.Time);
             }
-          }
-
-          catch (Exception fail)
-          {
-            String error = "The following error has occurred:\n\n";
-            error += fail.Message.ToString() + "\n\n";
-            MessageBox.Show(error);
           }
         }
       }

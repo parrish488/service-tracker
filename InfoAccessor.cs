@@ -1,47 +1,111 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+// <copyright file="InfoAccessor.cs" company="ParrishCorp">
+//     Copyright (c) ParrishCorp. All rights reserved.
+// </copyright>
+//
+// <revisionHistory> 
+// Jul 11, 2014     J. Parrish      Initial Implementation
+// </revisionHistory> 
+//-----------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Windows.Forms;
 
 namespace ServiceTracker
 {
+  /// <summary>
+  /// Info accessor class
+  /// </summary>
   public partial class InfoAccessor : Form
   {
-    String addType;
-    public bool employee = false;
-    public bool client = false;
-    public bool ticket = false;
-    public string name;
-    public string date;
-    private string employeeName;
+    /// <summary>Add type</summary>
+    private string m_addType;
+
+    /// <summary>Employee name</summary>
+    private string m_employeeName;
+
+    /// <summary>Query object</summary>
+    private DatabaseQuery queries = new DatabaseQuery();
+
+    /// <summary>
+    /// Initializes a new instance of the InfoAccessor class
+    /// </summary>
     public InfoAccessor()
     {
       InitializeComponent();
+      Employee = false;
+      Client = false;
+      Ticket = false;
     }
 
-    public InfoAccessor(String type)
+    /// <summary>
+    /// Initializes a new instance of the InfoAccessor class
+    /// </summary>
+    /// <param name="type">Type of object to be used</param>
+    public InfoAccessor(string type)
     {
       InitializeComponent();
-      addType = type;
-      if (addType == "Ticket" || addType == "CloseTicket" || addType == "CompleteTicket" || addType == "UnassignedTicket")
+
+      Employee = false;
+      Client = false;
+      Ticket = false;
+
+      m_addType = type;
+
+      if (m_addType == "Ticket" || m_addType == "CloseTicket" || m_addType == "CompleteTicket" || m_addType == "UnassignedTicket")
       {
         btnAddNew.Enabled = false;
       }
-      populate();
+
+      Populate();
     }
 
-    public InfoAccessor(String type, String employee)
+    /// <summary>
+    /// Initializes a new instance of the InfoAccessor class
+    /// </summary>
+    /// <param name="type">Type of object to be used</param>
+    /// <param name="employee">Employee name</param>
+    public InfoAccessor(string type, string employee)
     {
       InitializeComponent();
-      addType = type;
-      employeeName = employee;
-      if (addType == "Ticket" || addType == "CloseTicket" || addType == "CompleteTicket")
+
+      Employee = false;
+      Client = false;
+      Ticket = false;
+
+      m_addType = type;
+      m_employeeName = employee;
+
+      if (m_addType == "Ticket" || m_addType == "CloseTicket" || m_addType == "CompleteTicket")
       {
         btnAddNew.Enabled = false;
       }
-      populate();
+
+      Populate();
     }
 
-    private void btnSelect_Click(object sender, EventArgs e)
+    /// <summary>Gets or sets a value indicating whether it is an employee</summary>
+    public bool Employee { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether it is a client</summary>
+    public bool Client { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether it is a ticket</summary>
+    public bool Ticket { get; set; }
+
+    /// <summary>Gets or sets name</summary>
+    public string NameOther { get; set; }
+
+    /// <summary>Gets or sets date</summary>
+    public string Date { get; set; }
+
+    /// <summary>
+    /// Button event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnSelect_Click(object sender, EventArgs e)
     {
       bool exists = false;
       for (int i = 0; i < lbInfo.Items.Count; i++)
@@ -51,16 +115,29 @@ namespace ServiceTracker
           exists = true;
         }
       }
+
       if (exists)
       {
         DialogResult = DialogResult.Yes;
-        if (addType == "CloseTicket" || addType == "CompleteTicket" || addType == "UnassignedTicket")
-        {
 
+        if (m_addType == "CloseTicket" || m_addType == "CompleteTicket" || m_addType == "UnassignedTicket")
+        {
+          Dictionary<int, Client> clients = queries.QueryForAllClients(-1);
+          string[] information = lbInfo.SelectedItem.ToString().Split();
+
+          foreach (KeyValuePair<int, Client> pair in clients)
+          {
+            if (pair.Value.FirstName == information[6] && pair.Value.LastName == information[7])
+            {
+              NameOther = pair.Value.Id.ToString();
+            }
+          }
+          
+          Date = information[0];
         }
         else
         {
-          name = lbInfo.SelectedItem.ToString();
+          NameOther = lbInfo.SelectedItem.ToString();
         }
       }
       else
@@ -69,225 +146,90 @@ namespace ServiceTracker
       }
     }
 
-    private void btnCancel_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Cancel button event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnCancel_Click(object sender, EventArgs e)
     {
       DialogResult = DialogResult.Cancel;
     }
 
-    private void btnAddNew_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Add button event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnAddNew_Click(object sender, EventArgs e)
     {
-      if (addType == "Client")
+      if (m_addType == "Client")
       {
-        client = true;
+        Client = true;
         DialogResult = DialogResult.OK;
       }
       else
       {
-        employee = true;
+        Employee = true;
         DialogResult = DialogResult.OK;
       }
     }
 
-    private void populate()
+    /// <summary>
+    /// Populate the accessor
+    /// </summary>
+    private void Populate()
     {
-      switch (addType)
+      switch (m_addType)
       {
         case "Client":
           {
             this.Text = "Viewing Clients";
-            SQLiteDatabase db;
 
-            try
-            {
-              db = new SQLiteDatabase();
-              DataTable clients;
-              String query = "select * from Client";
-              clients = db.GetDataTable(query);
+            Dictionary<int, Client> clients = queries.QueryForAllClients(-1);
 
-              foreach (DataRow r in clients.Rows)
-              {
-                lbInfo.Items.Add(r["firstName"].ToString() + " " + r["lastName"].ToString());
-              }
-            }
-            catch (Exception fail)
+            foreach (KeyValuePair<int, Client> pair in clients)
             {
-              String error = "The following error has occurred:\n\n";
-              error += fail.Message.ToString() + "\n\n";
-              MessageBox.Show(error);
-            }
+              lbInfo.Items.Add(pair.Value.FirstName + " " + pair.Value.LastName);
+            }            
           }
+           
           break;
 
         case "Corrective":
-          {
-            this.Text = "Viewing Employees";
-            SQLiteDatabase db;
-
-            try
-            {
-              db = new SQLiteDatabase();
-              DataTable employees;
-              String query = "select * from Worker";
-              employees = db.GetDataTable(query);
-
-              foreach (DataRow r in employees.Rows)
-              {
-                if (r["actionStatus"].ToString() == "Pending Management Review")
-                {
-                  lbInfo.Items.Add(r["firstName"].ToString() + " " + r["lastName"].ToString());
-                }
-              }
-            }
-            catch (Exception fail)
-            {
-              String error = "The following error has occurred:\n\n";
-              error += fail.Message.ToString() + "\n\n";
-              MessageBox.Show(error);
-            }
-          }
-          break;
-
         case "Employee":
           {
             this.Text = "Viewing Employees";
-            SQLiteDatabase db;
 
-            try
-            {
-              db = new SQLiteDatabase();
-              DataTable employees;
-              String query = "select * from Worker";
-              employees = db.GetDataTable(query);
+            Dictionary<string, Worker> workers = queries.QueryForAllWorkers("null");
 
-              foreach (DataRow r in employees.Rows)
-              {
-                lbInfo.Items.Add(r["firstName"].ToString() + " " + r["lastName"].ToString());
-              }
-            }
-            catch (Exception fail)
+            foreach (KeyValuePair<string, Worker> pair in workers)
             {
-              String error = "The following error has occurred:\n\n";
-              error += fail.Message.ToString() + "\n\n";
-              MessageBox.Show(error);
-            }
+              lbInfo.Items.Add(pair.Value.FirstName + " " + pair.Value.LastName);
+            }  
           }
+
           break;
+        
         case "CloseTicket":
-          {
-            this.Text = "Viewing Tickets";
-            SQLiteDatabase db;
-
-            try
-            {
-              db = new SQLiteDatabase();
-              DataTable clients;
-              DataTable tickets;
-              String clientQuery = "select * from Client";
-              String ticketQuery = "select * from ServiceTicket";
-              clients = db.GetDataTable(clientQuery);
-              tickets = db.GetDataTable(ticketQuery);
-
-              foreach (DataRow r in tickets.Rows)
-              {
-                if (r["status"].ToString() == "Visit Completed")
-                {
-                  foreach (DataRow rw in clients.Rows)
-                  {
-                    if (rw["id"].ToString() == r["client"].ToString())
-                    {
-                      lbInfo.Items.Add(r["visitDate"].ToString() + " " + " @ " + r["visitTime"].ToString() + " -- " + rw["firstName"].ToString() + " " + rw["lastName"].ToString());
-                      name = r["client"].ToString();
-                      date = r["visitDate"].ToString() + " ";
-                    }
-                  }
-                }
-              }
-            }
-            catch (Exception fail)
-            {
-              String error = "The following error has occurred:\n\n";
-              error += fail.Message.ToString() + "\n\n";
-              MessageBox.Show(error);
-            }
-          }
-          break;
         case "CompleteTicket":
-          {
-            this.Text = "Viewing Tickets";
-            SQLiteDatabase db;
-
-            try
-            {
-              db = new SQLiteDatabase();
-              DataTable clients;
-              DataTable tickets;
-              String clientQuery = "select * from Client";
-              String ticketQuery = "select * from ServiceTicket";
-              clients = db.GetDataTable(clientQuery);
-              tickets = db.GetDataTable(ticketQuery);
-
-              foreach (DataRow r in tickets.Rows)
-              {
-                if (r["status"].ToString() == "Assigned" && r["assignedTech"].ToString() == employeeName)
-                {
-                  foreach (DataRow rw in clients.Rows)
-                  {
-                    if (rw["id"].ToString() == r["client"].ToString())
-                    {
-                      lbInfo.Items.Add(r["visitDate"].ToString() + " " + " @ " + r["visitTime"].ToString() + " -- " + rw["firstName"].ToString() + " " + rw["lastName"].ToString());
-                      name = r["client"].ToString();
-                      date = r["visitDate"].ToString() + " ";
-                    }
-                  }
-                }
-              }
-            }
-            catch (Exception fail)
-            {
-              String error = "The following error has occurred:\n\n";
-              error += fail.Message.ToString() + "\n\n";
-              MessageBox.Show(error);
-            }
-          }
-          break;
         case "UnassignedTicket":
           {
             this.Text = "Viewing Tickets";
-            SQLiteDatabase db;
+            
+            Dictionary<int, ServiceCall> tickets = queries.QueryForAllServiceCalls(queries.QueryForAllClients(-1));
 
-            try
+            foreach (KeyValuePair<int, ServiceCall> pair in tickets)
             {
-              db = new SQLiteDatabase();
-              DataTable clients;
-              DataTable tickets;
-              String clientQuery = "select * from Client";
-              String ticketQuery = "select * from ServiceTicket";
-              clients = db.GetDataTable(clientQuery);
-              tickets = db.GetDataTable(ticketQuery);
-
-              foreach (DataRow r in tickets.Rows)
+              if (pair.Value.JobStatus == "Visit Completed")
               {
-                if (r["status"].ToString() == "Unassigned")
-                {
-                  foreach (DataRow rw in clients.Rows)
-                  {
-                    if (rw["id"].ToString() == r["client"].ToString())
-                    {
-                      lbInfo.Items.Add(r["visitDate"].ToString() + " " + " @ " + r["visitTime"].ToString() + " -- " + rw["firstName"].ToString() + " " + rw["lastName"].ToString());
-                      name = r["client"].ToString();
-                      date = r["visitDate"].ToString() + " ";
-                    }
-                  }
-                }
+                lbInfo.Items.Add(pair.Value.Date + " " + " @ " + pair.Value.Time + " -- " + pair.Value.FirstName + " " + pair.Value.LastName);
+                NameOther = pair.Value.ClientId.ToString();
+                Date = pair.Value.Date + " ";
               }
             }
-            catch (Exception fail)
-            {
-              String error = "The following error has occurred:\n\n";
-              error += fail.Message.ToString() + "\n\n";
-              MessageBox.Show(error);
-            }
           }
+
           break;
         default:
           break;

@@ -1,81 +1,86 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+// <copyright file="Statistics.cs" company="ParrishCorp">
+//     Copyright (c) ParrishCorp. All rights reserved.
+// </copyright>
+//
+// <revisionHistory> 
+// Jul 11, 2014     J. Parrish      Initial Implementation
+// </revisionHistory> 
+//-----------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Windows.Forms;
 
 namespace ServiceTracker
 {
+  /// <summary>
+  /// Statistics class
+  /// </summary>
   public partial class Statistics : Form
   {
-    int counter = 0;
-    string tempName;
+    /// <summary>Completed counter</summary>
+    private int m_counter = 0;
 
+    /// <summary>Completed counter</summary>
+    private string m_tempName;
+
+    /// <summary>Query object</summary>
+    private DatabaseQuery queries = new DatabaseQuery();
+
+    /// <summary>
+    /// Initializes a new instance of the Statistics class
+    /// </summary>
     public Statistics()
     {
-
       InitializeComponent();
-      databaseQuery();
+      DatabaseQuery();
     }
 
-
-    private void databaseQuery()
+    /// <summary>
+    /// Query for employees
+    /// </summary>
+    private void DatabaseQuery()
     {
-      SQLiteDatabase db;
+      Dictionary<string, Worker> workers = queries.QueryForAllWorkers("null");
 
-      try
+      foreach (KeyValuePair<string, Worker> pair in workers)
       {
-        db = new SQLiteDatabase();
-        DataTable employees;
-        String query = "select * from Worker";
-        employees = db.GetDataTable(query);
-
-        foreach (DataRow r in employees.Rows)
-        {
-          cbEmployee.Items.Add(r["firstName"].ToString() + " " + r["lastName"].ToString());
-        }
-      }
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
+        cbEmployee.Items.Add(pair.Value.FirstName + " " + pair.Value.LastName);
       }
     }
 
-    private void btnClose_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Close button event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnClose_Click(object sender, EventArgs e)
     {
       DialogResult = DialogResult.Yes;
     }
 
-    private void btnDisplay_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Display button event
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnDisplay_Click(object sender, EventArgs e)
     {
-      tempName = cbEmployee.SelectedItem.ToString();
-      counter = 0;
-      //Query Database with name, then change label to show the count.
-      SQLiteDatabase db;
+      m_tempName = cbEmployee.SelectedItem.ToString();
+      m_counter = 0;
 
-      try
+      Dictionary<int, ServiceCall> tickets = queries.QueryForAllServiceCalls(queries.QueryForAllClients(-1));
+
+      foreach (KeyValuePair<int, ServiceCall> pair in tickets)
       {
-        db = new SQLiteDatabase();
-        DataTable employees;
-        String query = "select * from ServiceTicket";
-        employees = db.GetDataTable(query);
-
-        foreach (DataRow r in employees.Rows)
+        if (pair.Value.Tech == m_tempName && pair.Value.JobStatus == "Visit Completed")
         {
-          if (r["assignedTech"].ToString() == tempName)
-          {
-            counter++;
-          }
+          m_counter++;
         }
       }
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
-      }
-      lbCallCompleted.Text = "Number of Service calls completed: " + counter;
+
+      lbCallCompleted.Text = "Number of Service calls completed: " + m_counter;
     }
   }
 }
-

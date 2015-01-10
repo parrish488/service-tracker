@@ -1,102 +1,120 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+// <copyright file="AddEmployee.cs" company="ParrishCorp">
+//     Copyright (c) ParrishCorp. All rights reserved.
+// </copyright>
+//
+// <revisionHistory> 
+// Jul 11, 2014     J. Parrish      Initial Implementation
+// </revisionHistory> 
+//-----------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Windows.Forms;
 
 namespace ServiceTracker
 {
+  /// <summary>
+  /// Add Employee
+  /// </summary>
   public partial class AddEmployee : Form
   {
-    Worker worker = new Worker();
-    string temp;
+    /// <summary>Worker to add or edit</summary>
+    private Worker m_worker = new Worker();
+
+    /// <summary>Temp name to check against</summary>
+    private string temp;
+
+    /// <summary>Database query object</summary>
+    private DatabaseQuery m_queries = new DatabaseQuery();
+
+    /// <summary>
+    /// Initializes a new instance of the AddEmployee class
+    /// </summary>
     public AddEmployee()
     {
       InitializeComponent();
     }
 
+    /// <summary>
+    /// Initializes a new instance of the AddEmployee class
+    /// </summary>
+    /// <param name="name">Employee name</param>
     public AddEmployee(string name)
     {
       InitializeComponent();
       temp = name;
-      #region populate fields
+
       cbCorrectiveActionsStatus.SelectedIndex = 1;
 
       if (name != null)
       {
-        //Create Database object
-        SQLiteDatabase db;
-        try
-        {
-          db = new SQLiteDatabase();
-          DataTable workers;
-          String query = "select * from Worker";
-          workers = db.GetDataTable(query);
+        Dictionary<string, Worker> workers = m_queries.QueryForAllWorkers("null");
 
-          // Or looped through for some other reason
-          foreach (DataRow r in workers.Rows)
+        foreach (KeyValuePair<string, Worker> pair in workers)
+        {
+          if ((pair.Value.FirstName + " " + pair.Value.LastName) == name)
           {
-            if ((r["firstName"].ToString() + " " + r["lastName"].ToString()) == name)
+            lbEmployeeNum.Text = pair.Value.ID.ToString();
+            tbFirstName.Text = pair.Value.FirstName;
+            tbLastName.Text = pair.Value.LastName;
+            tbUsername.Text = pair.Value.Username;
+            tbPassword.Text = pair.Value.Password;
+            switch (pair.Value.WorkerType)
             {
-              lbEmployeeNum.Text = r["Id"].ToString();
-              tbFirstName.Text = r["firstName"].ToString();
-              tbLastName.Text = r["lastName"].ToString();
-              tbUsername.Text = r["username"].ToString();
-              tbPassword.Text = r["password"].ToString();
-              switch (r["type"].ToString())
-              {
-                case "Manager":
-                  {
-                    cbEmployeeType.SelectedIndex = 0;
-                    break;
-                  }
-                case "Technician":
-                  {
-                    cbEmployeeType.SelectedIndex = 1;
-                    break;
-                  }
-                case "Customer Service":
-                  {
-                    cbEmployeeType.SelectedIndex = 2;
-                    break;
-                  }
-              }
-              tbCorrectiveActions.Text = r["correctiveActions"].ToString();
-              switch (r["actionStatus"].ToString())
-              {
-                case "Pending Management Review":
-                  {
-                    cbCorrectiveActionsStatus.SelectedIndex = 0;
-                    break;
-                  }
-                case "No Action Needed":
-                  {
-                    cbCorrectiveActionsStatus.SelectedIndex = 1;
-                    break;
-                  }
-              }
+              case "Manager":
+                {
+                  cbEmployeeType.SelectedIndex = 0;
+                  break;
+                }
+
+              case "Technician":
+                {
+                  cbEmployeeType.SelectedIndex = 1;
+                  break;
+                }
+
+              case "Customer Service":
+                {
+                  cbEmployeeType.SelectedIndex = 2;
+                  break;
+                }
+            }
+
+            tbCorrectiveActions.Text = pair.Value.CorrectiveActions;
+            switch (pair.Value.ActionStatus)
+            {
+              case "Pending Management Review":
+                {
+                  cbCorrectiveActionsStatus.SelectedIndex = 0;
+                  break;
+                }
+
+              case "No Action Needed":
+                {
+                  cbCorrectiveActionsStatus.SelectedIndex = 1;
+                  break;
+                }
             }
           }
         }
-        catch (Exception fail)
-        {
-          String error = "The following error has occurred:\n\n";
-          error += fail.Message.ToString() + "\n\n";
-          MessageBox.Show(error);
-          this.Close();
-        }
       }
-
-      #endregion
-
     }
 
-    private void btnSubmit_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Button event for submit button
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnSubmit_Click(object sender, EventArgs e)
     {
       if (temp == null)
       {
-        if (tbFirstName.Text != "" && tbLastName.Text != "" && tbUsername.Text != "" && tbPassword.Text != "" && cbCorrectiveActionsStatus.Text != "" && cbEmployeeType.Text != "")
+        if (tbFirstName.Text != string.Empty && tbLastName.Text != string.Empty 
+          && tbUsername.Text != string.Empty && tbPassword.Text != string.Empty 
+          && cbCorrectiveActionsStatus.Text != string.Empty && cbEmployeeType.Text != string.Empty)
         {
-          databaseInsert();
+          DatabaseInsert();
           DialogResult = DialogResult.Yes;
         }
         else
@@ -104,12 +122,13 @@ namespace ServiceTracker
           MessageBox.Show("All fields are required except Corrective Actions.");
         }
       }
-
       else
       {
-        if (tbFirstName.Text != "" && tbLastName.Text != "" && tbUsername.Text != "" && tbPassword.Text != "" && cbCorrectiveActionsStatus.Text != "" && cbEmployeeType.Text != "")
+        if (tbFirstName.Text != string.Empty && tbLastName.Text != string.Empty 
+          && tbUsername.Text != string.Empty && tbPassword.Text != string.Empty 
+          && cbCorrectiveActionsStatus.Text != string.Empty && cbEmployeeType.Text != string.Empty)
         {
-          databaseUpdate();
+          DatabaseUpdate();
           DialogResult = DialogResult.Yes;
         }
         else
@@ -119,16 +138,22 @@ namespace ServiceTracker
       }
     }
 
-    private void btnCancel_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Button event for cancel button
+    /// </summary>
+    /// <param name="sender">sender object</param>
+    /// <param name="e">e arguments</param>
+    private void BtnCancel_Click(object sender, EventArgs e)
     {
       DialogResult = DialogResult.No;
     }
 
-    private void databaseInsert()
+    /// <summary>
+    /// Insert into database
+    /// </summary>
+    private void DatabaseInsert()
     {
-      //Create Database object
-      SQLiteDatabase db = new SQLiteDatabase();
-      Dictionary<String, String> data = new Dictionary<string, string>();
+      Dictionary<string, string> data = new Dictionary<string, string>();
       data.Add("firstName", tbFirstName.Text);
       data.Add("lastName", tbLastName.Text);
       data.Add("username", tbUsername.Text);
@@ -136,26 +161,18 @@ namespace ServiceTracker
       data.Add("type", cbEmployeeType.SelectedItem.ToString());
       data.Add("correctiveActions", tbCorrectiveActions.Text);
       data.Add("actionStatus", cbCorrectiveActionsStatus.SelectedItem.ToString());
-      try
-      {
-        db.Insert("Worker", data);
-      }
-      catch (Exception fail)
-      {
-        String error = "The following error has occurred:\n\n";
-        error += fail.Message.ToString() + "\n\n";
-        MessageBox.Show(error);
-        this.Close();
-      }
+
+      m_queries.InsertQuery(data);
     }
 
-    private void databaseUpdate()
+    /// <summary>
+    /// Update entry in database
+    /// </summary>
+    private void DatabaseUpdate()
     {
       if (temp != null)
       {
-        //Create Database object
-        SQLiteDatabase db = new SQLiteDatabase();
-        Dictionary<String, String> data = new Dictionary<string, string>();
+        Dictionary<string, string> data = new Dictionary<string, string>();
         data.Add("firstName", tbFirstName.Text);
         data.Add("lastName", tbLastName.Text);
         data.Add("username", tbUsername.Text);
@@ -163,23 +180,9 @@ namespace ServiceTracker
         data.Add("type", cbEmployeeType.SelectedItem.ToString());
         data.Add("correctiveActions", tbCorrectiveActions.Text);
         data.Add("actionStatus", cbCorrectiveActionsStatus.SelectedItem.ToString());
-        try
-        {
-          db.Update("Worker", data, String.Format("Worker.Id = {0}", lbEmployeeNum.Text));
-        }
-        catch (Exception fail)
-        {
-          String error = "The following error has occurred:\n\n";
-          error += fail.Message.ToString() + "\n\n";
-          MessageBox.Show(error);
-          this.Close();
-        }
+
+        m_queries.UpdateQuery(data, lbEmployeeNum.Text);
       }
-    }
-
-    private void cbCorrectiveActionsStatus_SelectedIndexChanged(object sender, EventArgs e)
-    {
-
     }
   }
 }

@@ -1,33 +1,64 @@
-﻿namespace ServiceTracker
+﻿//-----------------------------------------------------------------------
+// <copyright file="UserLogin.cs" company="ParrishCorp">
+//     Copyright (c) ParrishCorp. All rights reserved.
+// </copyright>
+//
+// <revisionHistory> 
+// Jul 11, 2014     J. Parrish      Initial Implementation
+// </revisionHistory> 
+//-----------------------------------------------------------------------
+namespace ServiceTracker
 {
-    partial class UserLogin
+  /// <summary>
+  /// User login designer
+  /// </summary>
+  public partial class UserLogin
+  {
+    /// <summary>Employee id label</summary>
+    private System.Windows.Forms.Label lblEmpID;
+
+    /// <summary>Employee password label</summary>
+    private System.Windows.Forms.Label lblPassword;
+
+    /// <summary>Employee id textbox</summary>
+    private System.Windows.Forms.TextBox tbEmpID;
+
+    /// <summary>Employee password textbox</summary>
+    private System.Windows.Forms.TextBox tbPassword;
+
+    /// <summary>Login button</summary>
+    private System.Windows.Forms.Button btnLogin;
+
+    /// <summary>Exit button</summary>
+    private System.Windows.Forms.Button btnExit;
+
+    /// <summary>
+    /// Required designer variable.
+    /// </summary>
+    private System.ComponentModel.IContainer components = null;
+
+    /// <summary>
+    /// Clean up any resources being used.
+    /// </summary>
+    /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+    protected override void Dispose(bool disposing)
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
-        private System.ComponentModel.IContainer components = null;
+      if (disposing && (components != null))
+      {
+        components.Dispose();
+      }
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+      base.Dispose(disposing);
+    }
 
-        #region Windows Form Designer generated code
+    #region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
-        private void InitializeComponent()
-        {
+    /// <summary>
+    /// Required method for Designer support - do not modify
+    /// the contents of this method with the code editor.
+    /// </summary>
+    private void InitializeComponent()
+    {
       this.lblEmpID = new System.Windows.Forms.Label();
       this.lblPassword = new System.Windows.Forms.Label();
       this.tbEmpID = new System.Windows.Forms.TextBox();
@@ -112,15 +143,8 @@
       this.ResumeLayout(false);
       this.PerformLayout();
 
-        }
-
-        #endregion
-
-        private System.Windows.Forms.Label lblEmpID;
-        private System.Windows.Forms.Label lblPassword;
-        private System.Windows.Forms.TextBox tbEmpID;
-        private System.Windows.Forms.TextBox tbPassword;
-        private System.Windows.Forms.Button btnLogin;
-        private System.Windows.Forms.Button btnExit;
     }
+
+    #endregion
+  }
 }
